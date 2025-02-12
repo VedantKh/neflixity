@@ -86,6 +86,11 @@ export default function Search({ onSearchResults }: SearchProps) {
         const semanticResults = await semanticResponse.json();
         console.log("Semantic search results:", semanticResults);
 
+        // Create a map of movie IDs to their scores
+        const idToScore = new Map(
+          semanticResults.results.map((r: any) => [r.movie_id, r.score])
+        );
+
         const semanticMovieIds = semanticResults.results.map(
           (r: any) => r.movie_id
         );
@@ -102,10 +107,22 @@ export default function Search({ onSearchResults }: SearchProps) {
         });
 
         const { movies } = await movieDetailsResponse.json();
-        console.log("Final movies data:", movies);
+
+        // Add scores to movies and sort by score
+        const moviesWithScores = movies.map((movie: MovieObject) => ({
+          ...movie,
+          score: idToScore.get(movie.id) || 0,
+        }));
+
+        // Sort by score in descending order
+        const sortedMovies = moviesWithScores.sort(
+          (a: MovieObject, b: MovieObject) => (b.score || 0) - (a.score || 0)
+        );
+
+        console.log("Final sorted movies data:", sortedMovies);
 
         if (onSearchResults) {
-          onSearchResults(movies, movies);
+          onSearchResults(sortedMovies, sortedMovies);
         }
       }
     } catch (error) {

@@ -15,4 +15,5 @@ export interface MovieObject {
   vote_count: number;
   video: boolean;
   original_title: string;
+  score?: number;
 }
