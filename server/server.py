@@ -29,8 +29,9 @@ CORS(app, resources={
     }
 })
 
-def prep_for_embeddings(name: str, description: str, keywords_list: str) -> str:
+def prep_for_embeddings(name: str, description: str, keywords_list: str, id: str) -> Tuple[int, str]:
     """Prepare movie data for embeddings by combining title, description and keywords."""
+    id = int(id)
     keywords_str = ""
     try:
         if isinstance(keywords_list, str):
@@ -42,7 +43,7 @@ def prep_for_embeddings(name: str, description: str, keywords_list: str) -> str:
     except (ValueError, SyntaxError, AttributeError) as e:
         print(f"Error parsing keywords: {e}")  # Log the specific error
             
-    return f'Title: {name}. Description: {description}{keywords_str}'
+    return id, f'Title: {name}. Description: {description}{keywords_str}'
 
 def get_detailed_instruct(task_description: str, query: str) -> str:
     return f'Instruct: {task_description}\nQuery: {query}'
@@ -176,19 +177,23 @@ def prepare_documents():
         print(f"Created DataFrames - Movies shape: {movies_df.shape}, Keywords shape: {keywords_df.shape}")
         
         # Prepare documents
-        documents = list(map(
+        id_doc_pairs = list(map(
             prep_for_embeddings,
             movies_df["title"],
             movies_df["overview"],
-            keywords_df["keywords"]
+            keywords_df["keywords"],
+            movies_df["id"]
         ))
+        
+        # Separate IDs and documents
+        ids, documents = zip(*id_doc_pairs)
         
         print(f"Generated {len(documents)} documents")
         print(f"First document sample: {documents[0] if documents else 'None'}")
         
         return jsonify({
             'documents': documents,
-            'count': len(documents)
+            'ids': ids
         })
         
     except Exception as e:
@@ -200,17 +205,20 @@ def vector_search():
     try:
         print("Received request to /api/vector_search")
         data = request.get_json()
+        print(f"Request data: {data.keys()}")
         
         if not data or 'query' not in data or 'documents' not in data:
             return jsonify({'error': 'Query and documents are required'}), 400
         
-        # Verify API key is available before processing
-        api_key = check_api_key()
-
+        # Log the movie IDs
+        print(f"Number of movie IDs received: {len(data['ids'])}")
+        print(f"First few movie IDs: {data['ids'][:5]}")
+        
         # Get the search query and documents
         search_query = data['query']
         documents = data['documents']
-
+        movie_ids = data['ids']
+        
         # Create the task description and query
         task = 'Given a movie query, analyze the plot elements and themes to retrieve relevant movie names and descriptions that match the query'
         query = get_detailed_instruct(task, search_query)
@@ -219,12 +227,17 @@ def vector_search():
         scores = batch_get_embeddings_and_scores([query], documents)
         
         # Get top 5 results
-        top_scores = scores[0]  # Since we only have one query
-        top_indices = np.argsort(top_scores)[-5:][::-1]  # Get indices of top 5 scores
+        top_scores = scores[0]
+        top_indices = np.argsort(top_scores)[-10:][::-1]
+        
+        # Log the results
+        print(f"Top 10 indices: {top_indices}")
+        print(f"Corresponding movie IDs: {[movie_ids[idx] for idx in top_indices]}")
         
         results = [{
             'document': documents[idx],
-            'score': float(top_scores[idx])  # Convert numpy float to Python float
+            'score': float(top_scores[idx]),
+            'movie_id': movie_ids[idx]
         } for idx in top_indices]
 
         return jsonify({

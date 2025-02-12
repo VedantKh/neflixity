@@ -18,6 +18,7 @@ export default function Search({ onSearchResults }: SearchProps) {
   const [keywords, setKeywords] = useState<KeywordObject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [documents, setDocuments] = useState<string[]>([]);
+  const [movieIds, setMovieIds] = useState<number[]>([]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +27,10 @@ export default function Search({ onSearchResults }: SearchProps) {
 
     setIsSearching(true);
     try {
+      console.log("Starting search with documents:", documents.length);
+      console.log("Number of movie IDs:", movieIds.length);
+      console.log("First few movie IDs:", movieIds.slice(0, 5));
+
       // First, convert natural language to genre and keyword using Claude
       const [genreResponse, keywordResponse] = await Promise.all([
         fetch("/api/convert-to-genre", {
@@ -57,51 +62,9 @@ export default function Search({ onSearchResults }: SearchProps) {
 
       const { matchedGenre } = JSON.parse(genreResponseText);
       const { matchedKeywords } = JSON.parse(keywordResponseText);
-      console.log("Matched Genre:", matchedGenre);
-      console.log("Matched Keywords:", matchedKeywords, typeof matchedKeywords);
 
       // Convert single keyword to array and add any additional keywords you want to match
       const actualArray: string[] = JSON.parse(matchedKeywords);
-
-      // Then fetch movies by both genre and keywords in parallel
-      const [genreMovies, keywordMovies] = await Promise.all([
-        fetch(`/api/movies?genre=${encodeURIComponent(matchedGenre)}`),
-        fetch(
-          `/api/movies-by-keyword?keywords=${encodeURIComponent(
-            actualArray.join(",")
-          )}`
-        ),
-      ]);
-
-      const [genreData, keywordData] = await Promise.all([
-        genreMovies.json(),
-        keywordMovies.json(),
-      ]);
-
-      // Combine and deduplicate results
-      const combinedRatings = [
-        ...genreData.moviesByRating,
-        ...keywordData.moviesByRating,
-      ]
-        .filter(
-          (movie, index, self) =>
-            index === self.findIndex((m) => m.id === movie.id)
-        )
-        .slice(0, 10);
-
-      const combinedPopularity = [
-        ...genreData.moviesByPopularity,
-        ...keywordData.moviesByPopularity,
-      ]
-        .filter(
-          (movie, index, self) =>
-            index === self.findIndex((m) => m.id === movie.id)
-        )
-        .slice(0, 10);
-
-      if (onSearchResults) {
-        onSearchResults(combinedRatings, combinedPopularity);
-      }
 
       // Perform semantic search if documents are loaded
       if (documents.length > 0) {
@@ -115,16 +78,35 @@ export default function Search({ onSearchResults }: SearchProps) {
             body: JSON.stringify({
               query: searchTerm,
               documents: documents,
+              ids: movieIds,
             }),
           }
         );
 
         const semanticResults = await semanticResponse.json();
-        console.log("Semantic Search Results:");
-        semanticResults.results.forEach((result: any, index: number) => {
-          console.log(`${index + 1}. Score: ${result.score.toFixed(2)}%`);
-          console.log(`   Document: ${result.document}`);
+        console.log("Semantic search results:", semanticResults);
+
+        const semanticMovieIds = semanticResults.results.map(
+          (r: any) => r.movie_id
+        );
+        console.log("Retrieved movie IDs:", semanticMovieIds);
+
+        const movieDetailsResponse = await fetch("/api/movies-by-ids", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ids: semanticMovieIds,
+          }),
         });
+
+        const { movies } = await movieDetailsResponse.json();
+        console.log("Final movies data:", movies);
+
+        if (onSearchResults) {
+          onSearchResults(movies, movies);
+        }
       }
     } catch (error) {
       console.error("Failed to search movies:", error);
@@ -134,35 +116,8 @@ export default function Search({ onSearchResults }: SearchProps) {
   };
 
   useEffect(() => {
-    const fetchGenres = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("/api/genres");
-        const data = await response.json();
-        setGenres(data.genres);
-        console.log(data.genres);
-      } catch (error) {
-        console.error("Failed to fetch genres:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const fetchKeywords = async () => {
-      try {
-        const response = await fetch("/api/keywords");
-        const data = await response.json();
-        setKeywords(data.keywords);
-        console.log(data.keywords);
-      } catch (error) {
-        console.error("Failed to fetch keywords:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const loadDocuments = async () => {
-      try {
-        // Fetch and prepare documents
         const [moviesResponse, keywordsResponse] = await Promise.all([
           fetch("/api/movie_data"),
           fetch("/api/keyword_data"),
@@ -173,7 +128,6 @@ export default function Search({ onSearchResults }: SearchProps) {
           keywordsResponse.json(),
         ]);
 
-        // Make the call to Flask API to prepare documents
         const embedResponse = await fetch(
           "http://localhost:8080/api/make_embeddings",
           {
@@ -188,22 +142,41 @@ export default function Search({ onSearchResults }: SearchProps) {
           }
         );
 
-        const { documents: preparedDocs } = await embedResponse.json();
+        const { documents: preparedDocs, ids: preparedIds } =
+          await embedResponse.json();
         setDocuments(preparedDocs);
-        console.log(preparedDocs);
+        setMovieIds(preparedIds);
       } catch (error) {
         console.error("Error loading documents:", error);
       }
     };
 
-    fetchKeywords();
-    fetchGenres();
-    loadDocuments();
-  }, []);
+    const fetchGenres = async () => {
+      try {
+        const response = await fetch("/api/genres");
+        const data = await response.json();
+        setGenres(data.genres);
+      } catch (error) {
+        console.error("Failed to fetch genres:", error);
+      }
+    };
 
-  //   if (isLoading) {
-  //     return <div>Loading genres...</div>;
-  //   }
+    const fetchKeywords = async () => {
+      try {
+        const response = await fetch("/api/keywords");
+        const data = await response.json();
+        setKeywords(data.keywords);
+      } catch (error) {
+        console.error("Failed to fetch keywords:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+    fetchGenres();
+    fetchKeywords();
+  }, []);
 
   return (
     <form onSubmit={handleSearch} className="w-full max-w-2xl">
