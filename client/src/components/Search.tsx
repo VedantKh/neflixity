@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { MovieObject } from "@/types/movie";
 import KeywordObject from "@/types/keyword";
 import GenreObject from "@/types/genre";
+import LoadingSpinner from "./LoadingSpinner";
 
 interface SearchProps {
   onSearchResults: (
@@ -19,6 +20,7 @@ export default function Search({ onSearchResults }: SearchProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [documents, setDocuments] = useState<string[]>([]);
   const [movieIds, setMovieIds] = useState<number[]>([]);
+  const [isVectorSearching, setIsVectorSearching] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +70,7 @@ export default function Search({ onSearchResults }: SearchProps) {
 
       // Perform semantic search if documents are loaded
       if (documents.length > 0) {
+        setIsVectorSearching(true);
         const semanticResponse = await fetch(
           "http://localhost:8080/api/vector_search",
           {
@@ -129,6 +132,7 @@ export default function Search({ onSearchResults }: SearchProps) {
       console.error("Failed to search movies:", error);
     } finally {
       setIsSearching(false);
+      setIsVectorSearching(false);
     }
   };
 
@@ -196,14 +200,21 @@ export default function Search({ onSearchResults }: SearchProps) {
   }, []);
 
   return (
-    <form onSubmit={handleSearch} className="w-full max-w-2xl">
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search movies..."
-        className="w-full px-4 py-2 rounded-lg bg-white/10 text-white/90 placeholder:text-white/50 border border-white/20 focus:outline-none focus:border-white/40"
-      />
-    </form>
+    <div className="w-full max-w-2xl space-y-4">
+      <form onSubmit={handleSearch} className="w-full">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search movies..."
+          className="w-full px-4 py-2 rounded-lg bg-white/10 text-white/90 placeholder:text-white/50 border border-white/20 focus:outline-none focus:border-white/40"
+        />
+      </form>
+      {isVectorSearching && (
+        <div className="flex justify-center">
+          <LoadingSpinner />
+        </div>
+      )}
+    </div>
   );
 }
