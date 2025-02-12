@@ -89,9 +89,7 @@ def load_or_compute_embeddings(documents: List[str], batch_size: int = 100) -> n
     embeddings_dir = Path("embeddings")
     embeddings_dir.mkdir(exist_ok=True)
     
-    # Create a hash of the documents to use as filename
-    documents_hash = hash(tuple(documents))
-    embeddings_file = embeddings_dir / f"embeddings_{documents_hash}.npy"
+    embeddings_file = embeddings_dir / f"embeddings_matrix.npy"
     
     # If embeddings file exists, load it
     if embeddings_file.exists():
