@@ -17,8 +17,11 @@ export default function Search({ onSearchResults }: SearchProps) {
   const [genres, setGenres] = useState<GenreObject[]>([]);
   const [keywords, setKeywords] = useState<KeywordObject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [documents, setDocuments] = useState<string[]>([]);
 
-  const handleSearch = async () => {
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!searchTerm.trim()) return;
 
     setIsSearching(true);
@@ -99,6 +102,30 @@ export default function Search({ onSearchResults }: SearchProps) {
       if (onSearchResults) {
         onSearchResults(combinedRatings, combinedPopularity);
       }
+
+      // Perform semantic search if documents are loaded
+      if (documents.length > 0) {
+        const semanticResponse = await fetch(
+          "http://localhost:8080/api/vector_search",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              query: searchTerm,
+              documents: documents,
+            }),
+          }
+        );
+
+        const semanticResults = await semanticResponse.json();
+        console.log("Semantic Search Results:");
+        semanticResults.results.forEach((result: any, index: number) => {
+          console.log(`${index + 1}. Score: ${result.score.toFixed(2)}%`);
+          console.log(`   Document: ${result.document}`);
+        });
+      }
     } catch (error) {
       console.error("Failed to search movies:", error);
     } finally {
@@ -133,8 +160,45 @@ export default function Search({ onSearchResults }: SearchProps) {
       }
     };
 
+    const loadDocuments = async () => {
+      try {
+        // Fetch and prepare documents
+        const [moviesResponse, keywordsResponse] = await Promise.all([
+          fetch("/api/movie_data"),
+          fetch("/api/keyword_data"),
+        ]);
+
+        const [moviesData, keywordsData] = await Promise.all([
+          moviesResponse.json(),
+          keywordsResponse.json(),
+        ]);
+
+        // Make the call to Flask API to prepare documents
+        const embedResponse = await fetch(
+          "http://localhost:8080/api/make_embeddings",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              movies: moviesData,
+              keywords: keywordsData,
+            }),
+          }
+        );
+
+        const { documents: preparedDocs } = await embedResponse.json();
+        setDocuments(preparedDocs);
+        console.log(preparedDocs);
+      } catch (error) {
+        console.error("Error loading documents:", error);
+      }
+    };
+
     fetchKeywords();
     fetchGenres();
+    loadDocuments();
   }, []);
 
   //   if (isLoading) {
@@ -142,44 +206,14 @@ export default function Search({ onSearchResults }: SearchProps) {
   //   }
 
   return (
-    <div className="flex gap-2 w-full max-w-md">
+    <form onSubmit={handleSearch} className="w-full max-w-2xl">
       <input
         type="text"
-        placeholder="Search by genre..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            handleSearch();
-          }
-        }}
-        className="flex-1 px-4 py-2 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
+        placeholder="Search movies..."
+        className="w-full px-4 py-2 rounded-lg bg-white/10 text-white/90 placeholder:text-white/50 border border-white/20 focus:outline-none focus:border-white/40"
       />
-      <button
-        onClick={handleSearch}
-        disabled={isSearching}
-        className="p-2 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        aria-label="Search"
-      >
-        {isSearching ? (
-          <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-        ) : (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 12h14" />
-            <path d="m12 5 7 7-7 7" />
-          </svg>
-        )}
-      </button>
-    </div>
+    </form>
   );
 }
