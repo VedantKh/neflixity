@@ -42,7 +42,8 @@ export async function GET() {
       // Skip records with invalid IDs or popularity
       const id = parseInt(record.id);
       const popularity = parseFloat(record.popularity);
-      return !isNaN(id) && !isNaN(popularity) && popularity >= 1;
+      const vote_count = parseFloat(record.vote_count)
+      return !isNaN(id) && !isNaN(popularity) && popularity >= 2 && vote_count >= 10;
     });
     console.log(
       `Returning ${filteredRecords.length} records after filtering by popularity and validity`

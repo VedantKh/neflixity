@@ -21,6 +21,9 @@ export default function Search({ onSearchResults }: SearchProps) {
   const [documents, setDocuments] = useState<string[]>([]);
   const [movieIds, setMovieIds] = useState<number[]>([]);
   const [isVectorSearching, setIsVectorSearching] = useState(false);
+  const [searchProgress, setSearchProgress] = useState<string>("");
+  const [totalMovies, setTotalMovies] = useState<number>(0);
+  const [foundIndices, setFoundIndices] = useState<boolean>(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +74,9 @@ export default function Search({ onSearchResults }: SearchProps) {
       // Perform semantic search if documents are loaded
       if (documents.length > 0) {
         setIsVectorSearching(true);
+        setSearchProgress(`Analyzing ${documents.length} movies...`);
+        setTotalMovies(documents.length);
+
         const semanticResponse = await fetch(
           "http://localhost:8080/api/vector_search",
           {
@@ -87,7 +93,8 @@ export default function Search({ onSearchResults }: SearchProps) {
         );
 
         const semanticResults = await semanticResponse.json();
-        console.log("Semantic search results:", semanticResults);
+        setSearchProgress("Found matching movies, retrieving details...");
+        setFoundIndices(true);
 
         // Create a map of movie IDs to their scores
         const idToScore = new Map(
@@ -117,15 +124,15 @@ export default function Search({ onSearchResults }: SearchProps) {
           score: idToScore.get(movie.id) || 0,
         }));
 
-        // First sort by semantic similarity score
-        const sortedBySemanticScore = moviesWithScores.sort(
-          (a: MovieObject, b: MovieObject) => (b.score || 0) - (a.score || 0)
-        );
-
-        // Take top 10 by popularity from the semantically similar results
-        const finalResults = sortedBySemanticScore
+        // First sort by popularity
+        const sortedByPopularity = moviesWithScores
           .sort((a: MovieObject, b: MovieObject) => b.popularity - a.popularity)
           .slice(0, 10);
+
+        // Then sort those top 10 by semantic similarity score
+        const finalResults = sortedByPopularity.sort(
+          (a: MovieObject, b: MovieObject) => (b.score || 0) - (a.score || 0)
+        );
 
         console.log("Final sorted movies data:", finalResults);
 
@@ -138,6 +145,8 @@ export default function Search({ onSearchResults }: SearchProps) {
     } finally {
       setIsSearching(false);
       setIsVectorSearching(false);
+      setSearchProgress("");
+      setFoundIndices(false);
     }
   };
 
@@ -205,7 +214,7 @@ export default function Search({ onSearchResults }: SearchProps) {
   }, []);
 
   return (
-    <div className="w-full max-w-2xl space-y-4">
+    <div className="w-full max-w-2xl">
       <form onSubmit={handleSearch} className="w-full">
         <input
           type="text"
@@ -213,14 +222,15 @@ export default function Search({ onSearchResults }: SearchProps) {
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search movies..."
           autoFocus
-          className="w-full mt-4 px-4 py-2 rounded-lg bg-white/5 text-white/90 placeholder:text-white/50 focus:outline-none focus:bg-white/10"
+          className="w-full mt-4 px-6 py-3 rounded-2xl bg-white/[0.07] text-white/90 
+            placeholder:text-white/40 outline-none focus:bg-white/[0.09] 
+            backdrop-blur-xl shadow-lg
+            transition-all duration-300 focus:scale-[1.01]"
         />
       </form>
-      {isVectorSearching && (
-        <div className="flex justify-center">
-          <LoadingSpinner />
-        </div>
-      )}
+      <div className="h-20 relative">
+        {isVectorSearching && <LoadingSpinner message={searchProgress} />}
+      </div>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import GenreObject from "./genre";
 export interface MovieObject {
   id: number;
   title: string;
-  tagline: string | null;         // need to add to MovieModal
+  tagline: string | null; // need to add to MovieModal
   overview: string;
   poster_path: string | null;
   release_date: string;
@@ -15,6 +15,6 @@ export interface MovieObject {
   vote_count: number;
   video: boolean;
   original_title: string;
-  score?: number;                // need to add to MovieModal
+  score?: number; // need to add to MovieModal
   imdb_id: string;
 }

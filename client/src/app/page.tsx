@@ -48,7 +48,7 @@ export default function Home() {
           <h1 className="text-6xl font-[200] text-center w-full text-white/90 font-[family-name:var(--font-dm-sans)]">
             netflixity.
           </h1>
-          <div className="w-full flex justify-center mb-24">
+          <div className="w-full flex justify-center mb-4">
             <Search onSearchResults={handleSearchResults} />
           </div>
 

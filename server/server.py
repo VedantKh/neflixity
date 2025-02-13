@@ -226,9 +226,9 @@ def vector_search():
         # Get embeddings and scores in batches
         scores = batch_get_embeddings_and_scores([query], documents)
         
-        # Get top 30 results
+        # Get top 20 results
         top_scores = scores[0]
-        top_indices = np.argsort(top_scores)[-30:][::-1]
+        top_indices = np.argsort(top_scores)[-20:][::-1]
         
         # Log the results
         print(f"Top 30 indices: {top_indices}")
