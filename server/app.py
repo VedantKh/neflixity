@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, url_for
+from flask import Flask, jsonify
 from flask_cors import CORS
 from routes.vector_search import vector_search
 from db.config import get_db, engine
@@ -21,14 +21,8 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Configure for large file uploads
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
-app.config['UPLOAD_FOLDER'] = '/tmp'  # Temporary storage for uploads
-
 # Register blueprints
-logger.info("Registering blueprints...")
-app.register_blueprint(vector_search, url_prefix='')  # No prefix to match the client's expectations
-logger.info("Blueprints registered successfully")
+app.register_blueprint(vector_search)
 
 @app.before_request
 def before_request():
@@ -117,18 +111,6 @@ def migration_status():
             'error': str(e),
             'traceback': traceback.format_exc()
         }), 500
-
-@app.route('/routes')
-def list_routes():
-    """List all registered routes."""
-    routes = []
-    for rule in app.url_map.iter_rules():
-        routes.append({
-            'endpoint': rule.endpoint,
-            'methods': list(rule.methods),
-            'path': str(rule)
-        })
-    return jsonify(routes)
 
 # Error handlers
 @app.errorhandler(500)

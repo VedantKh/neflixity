@@ -8,6 +8,8 @@ import os
 from ast import literal_eval
 from pathlib import Path
 from dotenv import load_dotenv
+from db.config import get_db
+from services.embedding_service import EmbeddingService
 
 load_dotenv()
 
@@ -48,19 +50,9 @@ def prep_for_embeddings(name: str, description: str, keywords_list: str, id: str
             
     return id, f'Title: {name}. Description: {description}{keywords_str}'
 
-def get_detailed_instruct(task_description: str, query: str) -> str:
-    return f'Instruct: {task_description}\nQuery: {query}'
-
 def get_embeddings_and_scores(queries: List[str], documents: List[str]) -> Tuple[np.ndarray, List[List[float]]]:
     """
     Get embeddings using OpenAI's API and compute similarity scores.
-
-    Args:
-        queries: List of query strings
-        documents: List of document strings
-
-    Returns:
-        tuple: (embeddings array, similarity scores matrix)
     """
     client = OpenAI(api_key=check_api_key())
 
@@ -79,35 +71,21 @@ def get_embeddings_and_scores(queries: List[str], documents: List[str]) -> Tuple
     query_embeddings = embeddings[:len(queries)]
     doc_embeddings = embeddings[len(queries):]
 
-    # Compute similarity scores (same as your original computation)
-    # Note: embeddings from OpenAI are already normalized
+    # Compute similarity scores
     scores = (query_embeddings @ doc_embeddings.T) * 100
 
     return embeddings, scores.tolist()
 
-def load_or_compute_embeddings(documents: List[str], batch_size: int = 100) -> np.ndarray:
+def get_embeddings(texts: List[str], batch_size: int = 100) -> np.ndarray:
     """
-    Load embeddings from file if they exist, otherwise compute and save them.
+    Get embeddings using OpenAI's API in batches.
     """
-    # Create embeddings directory if it doesn't exist
-    embeddings_dir = Path("embeddings")
-    embeddings_dir.mkdir(exist_ok=True)
-    
-    embeddings_file = embeddings_dir / f"embeddings_matrix.npy"
-    
-    # If embeddings file exists, load it
-    if embeddings_file.exists():
-        print("Loading existing embeddings from file")
-        return np.load(embeddings_file)
-    
-    # Otherwise, compute embeddings
-    print("Computing new embeddings")
     client = OpenAI(api_key=check_api_key())
+    all_embeddings = []
     
-    all_doc_embeddings = []
-    for i in range(0, len(documents), batch_size):
-        batch = documents[i:i + batch_size]
-        print(f"Processing batch {i//batch_size + 1} of {len(documents)//batch_size + 1}")
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        print(f"Processing batch {i//batch_size + 1} of {len(texts)//batch_size + 1}")
         
         response = client.embeddings.create(
             model="text-embedding-3-small",
@@ -115,53 +93,13 @@ def load_or_compute_embeddings(documents: List[str], batch_size: int = 100) -> n
             encoding_format="float"
         )
         batch_embeddings = [e.embedding for e in response.data]
-        all_doc_embeddings.extend(batch_embeddings)
+        all_embeddings.extend(batch_embeddings)
     
-    doc_embeddings = np.array(all_doc_embeddings)
-    
-    # Save embeddings to file
-    np.save(embeddings_file, doc_embeddings)
-    return doc_embeddings
-
-def batch_get_embeddings_and_scores(queries: List[str], documents: List[str], batch_size: int = 100) -> List[List[float]]:
-    """
-    Get embeddings using OpenAI's API and compute similarity scores in batches.
-    """
-    client = OpenAI(api_key=check_api_key())    
-    # Get query embeddings
-    query_response = client.embeddings.create(
-        model="text-embedding-3-small",
-        input=queries,
-        encoding_format="float"
-    )
-    query_embeddings = np.array([e.embedding for e in query_response.data])
-    
-    # Load or compute document embeddings
-    doc_embeddings = load_or_compute_embeddings(documents, batch_size)
-    
-    # Compute similarity scores
-    scores = (query_embeddings @ doc_embeddings.T) * 100
-    
-    return scores.tolist()
-
-# Example usage:
-task = 'Given a movie query, analyze the plot elements and themes to retrieve relevant movie names and descriptions that match the query'
-searches = [
-    "A children's animated movie about toys coming to life, perfect for family viewing",
-    "An adventure movie featuring dangerous wild animals and a magical board game",
-    "A comedy about elderly neighbors, fishing, and romance"
-]
-queries = list(map(get_detailed_instruct, [task]*3, searches))
-
-
-# embeddings, scores = get_embeddings_and_scores(queries, documents)
-# for row in scores:
-#     print(documents[np.argmax(row)])
+    return np.array(all_embeddings)
 
 @app.route('/api/make_embeddings', methods=['POST'])
 def prepare_documents():
     try:
-        # Get JSON data from request
         print("Received request to /api/make_embeddings")
         data = request.get_json()
         print(f"Received data keys: {data.keys() if data else 'None'}")
@@ -194,9 +132,34 @@ def prepare_documents():
         print(f"Generated {len(documents)} documents")
         print(f"First document sample: {documents[0] if documents else 'None'}")
         
+        # Get embeddings for documents
+        print("Computing embeddings...")
+        embeddings = get_embeddings(list(documents))
+        print(f"Generated embeddings shape: {embeddings.shape}")
+        
+        # Store embeddings in database
+        print("Storing embeddings in database...")
+        db = next(get_db())
+        embedding_service = EmbeddingService(db)
+        
+        # Prepare data for batch upsert
+        embeddings_data = [
+            {
+                'movie_id': movie_id,
+                'embedding': embedding,
+                'document': document
+            }
+            for movie_id, embedding, document in zip(ids, embeddings, documents)
+        ]
+        
+        # Batch upsert embeddings
+        successful_ids = embedding_service.batch_upsert_embeddings(embeddings_data)
+        print(f"Successfully stored {len(successful_ids)} embeddings in database")
+        
         return jsonify({
-            'documents': documents,
-            'ids': ids
+            'success': True,
+            'processed_count': len(successful_ids),
+            'processed_ids': successful_ids
         })
         
     except Exception as e:
@@ -210,41 +173,28 @@ def vector_search():
         data = request.get_json()
         print(f"Request data: {data.keys()}")
         
-        if not data or 'query' not in data or 'documents' not in data:
-            return jsonify({'error': 'Query and documents are required'}), 400
+        if not data or 'query' not in data:
+            return jsonify({'error': 'Query is required'}), 400
         
-        # Log the movie IDs
-        print(f"Number of movie IDs received: {len(data['ids'])}")
-        print(f"First few movie IDs: {data['ids'][:5]}")
-        
-        # Get the search query and documents
+        # Get the search query
         search_query = data['query']
-        documents = data['documents']
-        movie_ids = data['ids']
         
-        # Create the task description and query
-        task = 'Given a movie query, analyze the plot elements and themes to retrieve relevant movie names and descriptions that match the query'
-        query = get_detailed_instruct(task, search_query)
+        # Get query embedding
+        query_embedding = get_embeddings([search_query])[0]
         
-        # Get embeddings and scores in batches
-        scores = batch_get_embeddings_and_scores([query], documents)
+        # Get database session
+        db = next(get_db())
+        embedding_service = EmbeddingService(db)
         
-        # Get top 20 results
-        top_scores = scores[0]
-        top_indices = np.argsort(top_scores)[-20:][::-1]
+        # Get similar movies
+        similar_movies = embedding_service.get_similar_movies(
+            query_embedding=query_embedding,
+            limit=20,  # Get top 20 results
+            threshold=0.5
+        )
         
-        # Log the results
-        print(f"Top 30 indices: {top_indices}")
-        print(f"Corresponding movie IDs: {[movie_ids[idx] for idx in top_indices]}")
-        
-        results = [{
-            'document': documents[idx],
-            'score': float(top_scores[idx]),
-            'movie_id': movie_ids[idx]
-        } for idx in top_indices]
-
         return jsonify({
-            'results': results
+            'results': similar_movies
         })
 
     except Exception as e:
@@ -253,13 +203,16 @@ def vector_search():
 
 @app.route('/api/reset_embeddings', methods=['POST'])
 def reset_embeddings():
-    """Delete the stored embeddings file."""
+    """Delete all embeddings from the database."""
     try:
-        embeddings_file = Path("embeddings/embeddings_matrix.npy")
-        if embeddings_file.exists():
-            embeddings_file.unlink()  # Delete the file
-            return jsonify({'message': 'Embeddings file successfully deleted'})
-        return jsonify({'message': 'No embeddings file found'})
+        db = next(get_db())
+        embedding_service = EmbeddingService(db)
+        
+        # Delete all records from movie_embeddings table
+        db.query(MovieEmbedding).delete()
+        db.commit()
+        
+        return jsonify({'message': 'All embeddings successfully deleted from database'})
     except Exception as e:
         print(f"Error in reset_embeddings: {str(e)}")
         return jsonify({'error': str(e)}), 500

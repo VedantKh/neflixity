@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "pip install -r requirements.txt"
 
 [deploy]
-startCommand = "PYTHONUNBUFFERED=1 alembic upgrade head && gunicorn app:app --bind 0.0.0.0:$PORT --workers 4 --threads 2 --timeout 300 --log-level debug --error-logfile - --access-logfile - --capture-output --max-requests 1000 --max-requests-jitter 50"
+startCommand = "PYTHONUNBUFFERED=1 alembic upgrade head && gunicorn app:app --bind 0.0.0.0:$PORT --workers 4 --threads 2 --timeout 120 --log-level debug --error-logfile - --access-logfile - --capture-output"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
@@ -12,5 +12,4 @@ restartPolicyMaxRetries = 5
 [deploy.env]
 RAILWAY_ENVIRONMENT = "production"
 FLASK_ENV = "production"
-PYTHONPATH = "/app"
-MAX_CONTENT_LENGTH = "524288000"  # 500MB in bytes 
+PYTHONPATH = "/app" 
