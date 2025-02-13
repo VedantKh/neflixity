@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, url_for
 from flask_cors import CORS
 from routes.vector_search import vector_search
 from db.config import get_db, engine
@@ -22,7 +22,9 @@ app = Flask(__name__)
 CORS(app)
 
 # Register blueprints
-app.register_blueprint(vector_search)
+logger.info("Registering blueprints...")
+app.register_blueprint(vector_search, url_prefix='')  # No prefix to match the client's expectations
+logger.info("Blueprints registered successfully")
 
 @app.before_request
 def before_request():
@@ -111,6 +113,18 @@ def migration_status():
             'error': str(e),
             'traceback': traceback.format_exc()
         }), 500
+
+@app.route('/routes')
+def list_routes():
+    """List all registered routes."""
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append({
+            'endpoint': rule.endpoint,
+            'methods': list(rule.methods),
+            'path': str(rule)
+        })
+    return jsonify(routes)
 
 # Error handlers
 @app.errorhandler(500)

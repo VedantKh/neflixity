@@ -4,6 +4,7 @@ import numpy as np
 from db.config import get_db
 from services.embedding_service import EmbeddingService
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 vector_search = Blueprint('vector_search', __name__)
@@ -113,4 +114,55 @@ def batch_upsert():
 
     except Exception as e:
         logger.error(f"Batch upsert failed: {str(e)}", exc_info=True)
-        return jsonify({'error': str(e)}), 500 
+        return jsonify({'error': str(e)}), 500
+
+@vector_search.route('/api/embeddings/upload-matrix', methods=['POST'])
+def upload_embeddings_matrix():
+    """Upload embeddings matrix and process it into the database."""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+        if file.filename != 'embeddings_matrix.npy':
+            return jsonify({'error': 'Invalid file name. Must be embeddings_matrix.npy'}), 400
+
+        # Load the numpy array
+        embeddings_matrix = np.load(file)
+        logger.info(f"Loaded embeddings matrix with shape: {embeddings_matrix.shape}")
+
+        # Get database session
+        db = next(get_db())
+        embedding_service = EmbeddingService(db)
+
+        # Process each embedding
+        successful_ids = []
+        for i, embedding in enumerate(embeddings_matrix):
+            try:
+                # Create embedding data
+                embedding_data = {
+                    'movie_id': i,  # Using index as movie_id
+                    'embedding': embedding,
+                    'document': f'Movie {i}'  # Placeholder document
+                }
+                
+                # Add to batch
+                result = embedding_service.batch_upsert_embeddings([embedding_data])
+                successful_ids.extend(result)
+                
+            except Exception as e:
+                logger.error(f"Error processing embedding {i}: {str(e)}")
+                continue
+
+        return jsonify({
+            'success': True,
+            'message': 'Embeddings matrix processed successfully',
+            'processed_count': len(successful_ids),
+            'matrix_shape': embeddings_matrix.shape
+        })
+
+    except Exception as e:
+        logger.error(f"Failed to process embeddings matrix: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': str(e)
+        }), 500 
