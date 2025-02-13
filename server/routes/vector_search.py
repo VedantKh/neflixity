@@ -124,4 +124,29 @@ def batch_upsert():
         })
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500 
+        return jsonify({'error': str(e)}), 500
+
+@vector_search.route('/api/check_openai', methods=['GET'])
+def check_openai():
+    """Check if OpenAI API key is configured."""
+    try:
+        api_key = check_api_key()
+        # Create a simple test embedding to verify the key works
+        client = OpenAI(api_key=api_key)
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input="test",
+            encoding_format="float"
+        )
+        return jsonify({
+            'status': 'ok',
+            'message': 'OpenAI API key is configured and working'
+        })
+    except Exception as e:
+        logger.error(f"OpenAI API key check failed: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500 
