@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from routes.vector_search import vector_search
 from routes.embeddings import embeddings
@@ -20,7 +20,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS to allow all origins for our API endpoints
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",  # Allow all origins
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Register blueprints
 app.register_blueprint(vector_search)
@@ -35,6 +43,18 @@ def before_request():
     except Exception as e:
         logger.error(f"Database connection failed in before_request: {str(e)}")
         raise
+
+@app.before_request
+def log_request_info():
+    """Log details about each request."""
+    logger.info('Headers: %s', dict(request.headers))
+    logger.info('Body: %s', request.get_data())
+
+@app.after_request
+def after_request(response):
+    """Log the response status."""
+    logger.info('Response Status: %s', response.status)
+    return response
 
 def get_migration_status():
     """Get current migration status."""
@@ -126,12 +146,12 @@ def internal_error(error):
     }), 500
 
 @app.errorhandler(Exception)
-def handle_exception(error):
-    logger.error(f"Unhandled Exception: {str(error)}")
+def handle_exception(e):
+    """Handle any uncaught exception."""
+    logger.error('Unhandled Exception: %s', str(e))
     logger.error(traceback.format_exc())
     return jsonify({
-        'error': 'Unhandled Exception',
-        'message': str(error),
+        'error': str(e),
         'traceback': traceback.format_exc()
     }), 500
 

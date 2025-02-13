@@ -3,71 +3,105 @@ from typing import List, Dict, Any
 import numpy as np
 from openai import OpenAI
 import os
+import traceback
+import logging
 from db.config import get_db
 from services.embedding_service import EmbeddingService
 
 vector_search = Blueprint('vector_search', __name__)
 
+logger = logging.getLogger(__name__)
+
 def check_api_key() -> str:
     """Check and return the OpenAI API key from environment variables."""
     api_key = os.environ.get('OPENAI_API_KEY')
     if not api_key:
+        logger.error("OPENAI_API_KEY environment variable is not set")
         raise ValueError("OPENAI_API_KEY environment variable is not set")
     return api_key
 
 def get_embeddings(texts: List[str], batch_size: int = 100) -> np.ndarray:
     """Get embeddings using OpenAI's API in batches."""
-    client = OpenAI(api_key=check_api_key())
-    all_embeddings = []
-    
-    for i in range(0, len(texts), batch_size):
-        batch = texts[i:i + batch_size]
-        print(f"Processing batch {i//batch_size + 1} of {len(texts)//batch_size + 1}")
+    try:
+        api_key = check_api_key()
+        logger.info("Successfully retrieved API key")
         
-        response = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=batch,
-            encoding_format="float"
-        )
-        batch_embeddings = [e.embedding for e in response.data]
-        all_embeddings.extend(batch_embeddings)
-    
-    return np.array(all_embeddings)
+        client = OpenAI(api_key=api_key)
+        all_embeddings = []
+        
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            logger.info(f"Processing batch {i//batch_size + 1} of {len(texts)//batch_size + 1}")
+            
+            try:
+                response = client.embeddings.create(
+                    model="text-embedding-3-small",
+                    input=batch,
+                    encoding_format="float"
+                )
+                batch_embeddings = [e.embedding for e in response.data]
+                all_embeddings.extend(batch_embeddings)
+            except Exception as e:
+                logger.error(f"Error getting embeddings from OpenAI: {str(e)}")
+                logger.error(traceback.format_exc())
+                raise
+        
+        return np.array(all_embeddings)
+    except Exception as e:
+        logger.error(f"Error in get_embeddings: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise
 
 @vector_search.route('/api/vector_search', methods=['POST'])
 def search():
     try:
-        print("Received request to /api/vector_search")
+        logger.info("Received request to /api/vector_search")
         data = request.get_json()
-        print(f"Request data: {data.keys()}")
+        logger.info(f"Request data keys: {data.keys() if data else 'None'}")
         
         if not data or 'query' not in data:
+            logger.error("Missing query in request data")
             return jsonify({'error': 'Query is required'}), 400
         
         # Get the search query
         search_query = data['query']
+        logger.info(f"Processing search query: {search_query}")
         
-        # Get query embedding
-        query_embedding = get_embeddings([search_query])[0]
-        
-        # Get database session
-        db = next(get_db())
-        embedding_service = EmbeddingService(db)
-        
-        # Get similar movies
-        similar_movies = embedding_service.get_similar_movies(
-            query_embedding=query_embedding,
-            limit=20,  # Get top 20 results
-            threshold=0.1
-        )
-        
-        return jsonify({
-            'results': similar_movies
-        })
+        try:
+            # Get query embedding
+            logger.info("Getting query embedding from OpenAI")
+            query_embedding = get_embeddings([search_query])[0]
+            logger.info("Successfully got query embedding")
+            
+            # Get database session
+            logger.info("Getting database session")
+            db = next(get_db())
+            embedding_service = EmbeddingService(db)
+            
+            # Get similar movies
+            logger.info("Finding similar movies")
+            similar_movies = embedding_service.get_similar_movies(
+                query_embedding=query_embedding,
+                limit=20,  # Get top 20 results
+                threshold=0.1
+            )
+            logger.info(f"Found {len(similar_movies)} similar movies")
+            
+            return jsonify({
+                'results': similar_movies
+            })
+        except Exception as e:
+            logger.error(f"Error processing search: {str(e)}")
+            logger.error(traceback.format_exc())
+            raise
 
     except Exception as e:
-        print(f"Error in vector_search: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error in vector_search: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
 
 @vector_search.route('/api/embeddings/batch', methods=['POST'])
 def batch_upsert():
