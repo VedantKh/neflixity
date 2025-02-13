@@ -1,4 +1,4 @@
-import { GenreObject } from "@/types/movie";
+import GenreObject from "@/types/genre";
 
 interface GenreTagProps {
   genre: GenreObject;
