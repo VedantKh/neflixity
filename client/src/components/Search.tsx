@@ -117,15 +117,20 @@ export default function Search({ onSearchResults }: SearchProps) {
           score: idToScore.get(movie.id) || 0,
         }));
 
-        // Sort by score in descending order
-        const sortedMovies = moviesWithScores.sort(
+        // First sort by semantic similarity score
+        const sortedBySemanticScore = moviesWithScores.sort(
           (a: MovieObject, b: MovieObject) => (b.score || 0) - (a.score || 0)
         );
 
-        console.log("Final sorted movies data:", sortedMovies);
+        // Take top 10 by popularity from the semantically similar results
+        const finalResults = sortedBySemanticScore
+          .sort((a: MovieObject, b: MovieObject) => b.popularity - a.popularity)
+          .slice(0, 10);
+
+        console.log("Final sorted movies data:", finalResults);
 
         if (onSearchResults) {
-          onSearchResults(sortedMovies, sortedMovies);
+          onSearchResults(finalResults, finalResults);
         }
       }
     } catch (error) {
@@ -208,7 +213,7 @@ export default function Search({ onSearchResults }: SearchProps) {
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search movies..."
           autoFocus
-          className="w-full px-4 py-2 rounded-lg bg-white/5 text-white/90 placeholder:text-white/50 focus:outline-none focus:bg-white/10"
+          className="w-full mt-4 px-4 py-2 rounded-lg bg-white/5 text-white/90 placeholder:text-white/50 focus:outline-none focus:bg-white/10"
         />
       </form>
       {isVectorSearching && (

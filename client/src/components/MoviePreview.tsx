@@ -1,6 +1,7 @@
 import { MovieObject } from "@/types/movie";
 import { useState } from "react";
 import MovieModal from "./MovieModal";
+import GenreTag from "./GenreTag";
 
 interface MoviePreviewProps {
   movie: MovieObject;
@@ -71,12 +72,7 @@ export default function MoviePreview({ movie }: MoviePreviewProps) {
             {/* Genres */}
             <div className="flex flex-wrap gap-2 justify-center">
               {movie.genres.map((genre) => (
-                <span
-                  key={genre.id}
-                  className="px-3.5 py-1.5 text-xs font-medium rounded-full bg-white/[0.06] text-white/70 backdrop-blur-md border border-white/[0.06] shadow-sm tracking-wide"
-                >
-                  {genre.name}
-                </span>
+                <GenreTag key={genre.id} genre={genre} />
               ))}
             </div>
 

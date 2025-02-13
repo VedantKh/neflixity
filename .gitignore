@@ -61,5 +61,4 @@ Thumbs.db
 
 # Project specific
 /client/src/data/raw_data/
-/client/src/data/json_db/
-/embeddings/
+/server/embeddings/

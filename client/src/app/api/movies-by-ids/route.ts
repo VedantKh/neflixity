@@ -42,6 +42,7 @@ export async function POST(request: Request) {
         vote_count: parseInt(record.vote_count),
         video: record.video === "True",
         original_title: record.original_title,
+        imdb_id: record.imdb_id,
       }));
 
     return NextResponse.json({ movies });

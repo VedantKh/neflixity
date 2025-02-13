@@ -36,7 +36,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Blue gradient blur effect */}
+      {/* Enhanced gradient blur effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/30 rounded-full blur-[128px]" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-[128px]" />
@@ -48,9 +48,10 @@ export default function Home() {
           <h1 className="text-6xl font-[200] text-center w-full text-white/90 font-[family-name:var(--font-dm-sans)]">
             netflixity.
           </h1>
-          <div className="w-full flex justify-center">
+          <div className="w-full flex justify-center mb-24">
             <Search onSearchResults={handleSearchResults} />
           </div>
+
           <MovieStack movies={moviesRatingsList} isLoading={isLoading} />
         </main>
       </div>

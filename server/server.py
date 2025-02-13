@@ -226,12 +226,12 @@ def vector_search():
         # Get embeddings and scores in batches
         scores = batch_get_embeddings_and_scores([query], documents)
         
-        # Get top 5 results
+        # Get top 30 results
         top_scores = scores[0]
-        top_indices = np.argsort(top_scores)[-10:][::-1]
+        top_indices = np.argsort(top_scores)[-30:][::-1]
         
         # Log the results
-        print(f"Top 10 indices: {top_indices}")
+        print(f"Top 30 indices: {top_indices}")
         print(f"Corresponding movie IDs: {[movie_ids[idx] for idx in top_indices]}")
         
         results = [{
