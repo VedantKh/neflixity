@@ -251,6 +251,19 @@ def vector_search():
         print(f"Error in vector_search: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/reset_embeddings', methods=['POST'])
+def reset_embeddings():
+    """Delete the stored embeddings file."""
+    try:
+        embeddings_file = Path("embeddings/embeddings_matrix.npy")
+        if embeddings_file.exists():
+            embeddings_file.unlink()  # Delete the file
+            return jsonify({'message': 'Embeddings file successfully deleted'})
+        return jsonify({'message': 'No embeddings file found'})
+    except Exception as e:
+        print(f"Error in reset_embeddings: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port)
