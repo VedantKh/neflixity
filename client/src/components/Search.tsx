@@ -36,41 +36,6 @@ export default function Search({ onSearchResults }: SearchProps) {
       console.log("Number of movie IDs:", movieIds.length);
       console.log("First few movie IDs:", movieIds.slice(0, 5));
 
-      // First, convert natural language to genre and keyword using Claude
-      const [genreResponse, keywordResponse] = await Promise.all([
-        fetch("/api/convert-to-genre", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query: searchTerm,
-            availableGenres: genres,
-          }),
-        }),
-        fetch("/api/convert-to-keyword", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query: searchTerm,
-            availableKeywords: keywords,
-          }),
-        }),
-      ]);
-
-      const [genreResponseText, keywordResponseText] = await Promise.all([
-        genreResponse.text(),
-        keywordResponse.text(),
-      ]);
-
-      const { matchedGenre } = JSON.parse(genreResponseText);
-      const { matchedKeywords } = JSON.parse(keywordResponseText);
-
-      // Convert single keyword to array and add any additional keywords you want to match
-      const actualArray: string[] = JSON.parse(matchedKeywords);
-
       // Perform semantic search if documents are loaded
       if (documents.length > 0) {
         setIsVectorSearching(true);
