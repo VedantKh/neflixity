@@ -23,7 +23,10 @@ app = Flask(__name__)
 # Configure CORS to allow requests from your Next.js app
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3000"],
+        "origins": [
+            "http://localhost:3000",
+            "https://neflixity.vercel.app"  # Add your Vercel domain here
+        ],
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     }
