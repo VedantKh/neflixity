@@ -8,6 +8,7 @@ import logging
 from db.config import get_db
 from services.embedding_service import EmbeddingService
 from db.models import MovieEmbedding
+import httpx
 
 vector_search = Blueprint('vector_search', __name__)
 
@@ -21,13 +22,19 @@ def check_api_key() -> str:
         raise ValueError("OPENAI_API_KEY environment variable is not set")
     return api_key
 
+def get_openai_client() -> OpenAI:
+    """Get an OpenAI client with configured timeouts."""
+    return OpenAI(
+        api_key=check_api_key(),
+        http_client=httpx.Client(
+            timeout=httpx.Timeout(30.0, connect=10.0)  # 30s total timeout, 10s connect timeout
+        )
+    )
+
 def get_embeddings(texts: List[str], batch_size: int = 100) -> np.ndarray:
     """Get embeddings using OpenAI's API in batches."""
     try:
-        api_key = check_api_key()
-        logger.info("Successfully retrieved API key")
-        
-        client = OpenAI(api_key=api_key)
+        client = get_openai_client()
         all_embeddings = []
         
         for i in range(0, len(texts), batch_size):
@@ -181,8 +188,7 @@ def test_search():
     try:
         # First test OpenAI
         logger.info("Testing OpenAI API...")
-        api_key = check_api_key()
-        client = OpenAI(api_key=api_key)
+        client = get_openai_client()
         response = client.embeddings.create(
             model="text-embedding-3-small",
             input="test",
