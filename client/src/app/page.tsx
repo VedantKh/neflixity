@@ -30,26 +30,27 @@ export default function Home() {
     }
   };
 
-  const handleSearchResults = (
-    moviesByRating: MovieObject[],
-  ) => {
+  const handleSearchResults = (moviesByRating: MovieObject[]) => {
     setMoviesRatingsList(moviesByRating);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-1000 via-blue-900 to-gray-1000">
-      <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-inter)]">
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Blue gradient blur effect */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/30 rounded-full blur-[128px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-[128px]" />
+      </div>
+
+      {/* Content */}
+      <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-dm-sans)] relative z-10">
         <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-full max-w-7xl">
-          <h1 className="text-4xl font-bold text-center w-full text-white/90">
-            {" "}
-            Suflix{" "}
+          <h1 className="text-6xl font-[200] text-center w-full text-white/90 font-[family-name:var(--font-dm-sans)]">
+            netflixity.
           </h1>
           <div className="w-full flex justify-center">
             <Search onSearchResults={handleSearchResults} />
           </div>
-          <h3 className="text-2xl font-semibold text-white/90 tracking-tight ml-8">
-            Top rated
-          </h3>
           <MovieStack movies={moviesRatingsList} isLoading={isLoading} />
         </main>
       </div>

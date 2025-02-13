@@ -8,18 +8,21 @@ interface MoviePreviewProps {
 
 export default function MoviePreview({ movie }: MoviePreviewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <>
       <div
         onClick={() => setIsModalOpen(true)}
-        className="group relative w-full min-w-[350px] max-w-lg rounded-[32px] overflow-hidden hover:scale-[1.02] transition-all duration-300 mx-auto cursor-pointer"
+        className="group relative w-full min-w-[350px] max-w-lg rounded-[32px] overflow-visible hover:scale-[1.02] transition-all duration-300 mx-auto cursor-pointer"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Glass background */}
-        <div className="absolute inset-0 bg-[#1A1A1A]/80 backdrop-blur-xl rounded-[32px] shadow-xl border border-white/[0.08]" />
+        <div className="absolute inset-1 bg-[#1A1A1A]/40 backdrop-blur-xl rounded-[32px] shadow-xl" />
 
         {/* Hover overlay mask */}
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 flex items-center justify-center gap-12">
+        <div className="absolute inset-1 bg-black/80 backdrop-blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 flex items-center justify-center gap-12 rounded-[32px]">
           {/* Rating */}
           <div className="flex flex-col items-center gap-2">
             <span className="text-yellow-400 text-3xl mb-0.5">★</span>
@@ -54,10 +57,10 @@ export default function MoviePreview({ movie }: MoviePreviewProps) {
           </div>
         </div>
 
-        <div className="relative p-6 flex flex-col gap-5 items-center text-center">
+        <div className="relative p-6 m-1 flex flex-col gap-5 items-center text-center">
           {/* Movie info */}
           <div className="space-y-4 w-full flex flex-col items-center">
-            <h2 className="text-xl font-semibold text-white/90 line-clamp-2 tracking-tight w-full">
+            <h2 className="text-xl font-regular text-white/90 line-clamp-2 w-full">
               {movie.title}
             </h2>
 

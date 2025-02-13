@@ -207,7 +207,8 @@ export default function Search({ onSearchResults }: SearchProps) {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search movies..."
-          className="w-full px-4 py-2 rounded-lg bg-white/10 text-white/90 placeholder:text-white/50 border border-white/20 focus:outline-none focus:border-white/40"
+          autoFocus
+          className="w-full px-4 py-2 rounded-lg bg-white/5 text-white/90 placeholder:text-white/50 focus:outline-none focus:bg-white/10"
         />
       </form>
       {isVectorSearching && (
