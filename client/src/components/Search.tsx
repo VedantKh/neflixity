@@ -43,7 +43,7 @@ export default function Search({ onSearchResults }: SearchProps) {
         setTotalMovies(documents.length);
 
         const semanticResponse = await fetch(
-          "https://neflixity-production.up.railway.app/api/vector_search",
+          "https://neflixity-production-d3ae.up.railway.app/api/vector_search",
           {
             method: "POST",
             headers: {
@@ -129,7 +129,7 @@ export default function Search({ onSearchResults }: SearchProps) {
         ]);
 
         const embedResponse = await fetch(
-          "https://neflixity-production.up.railway.app/api/make_embeddings",
+          "https://neflixity-production-d3ae.up.railway.app/api/make_embeddings",
           {
             method: "POST",
             headers: {

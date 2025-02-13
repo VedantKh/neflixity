@@ -190,7 +190,7 @@ def vector_search():
         similar_movies = embedding_service.get_similar_movies(
             query_embedding=query_embedding,
             limit=20,  # Get top 20 results
-            threshold=0.5
+            threshold=0.1
         )
         
         return jsonify({
