@@ -7,6 +7,7 @@ import traceback
 import logging
 from db.config import get_db
 from services.embedding_service import EmbeddingService
+from db.models import MovieEmbedding
 
 vector_search = Blueprint('vector_search', __name__)
 
@@ -144,6 +145,29 @@ def check_openai():
         })
     except Exception as e:
         logger.error(f"OpenAI API key check failed: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
+@vector_search.route('/api/check_db', methods=['GET'])
+def check_db():
+    """Check if we can access the database and movie embeddings."""
+    try:
+        db = next(get_db())
+        count = db.query(MovieEmbedding).count()
+        sample = db.query(MovieEmbedding).first()
+        
+        return jsonify({
+            'status': 'ok',
+            'total_embeddings': count,
+            'has_sample': sample is not None,
+            'sample_movie_id': sample.movie_id if sample else None
+        })
+    except Exception as e:
+        logger.error(f"Database check failed: {str(e)}")
         logger.error(traceback.format_exc())
         return jsonify({
             'status': 'error',
