@@ -173,4 +173,49 @@ def check_db():
             'status': 'error',
             'error': str(e),
             'traceback': traceback.format_exc()
+        }), 500
+
+@vector_search.route('/api/test_search', methods=['GET'])
+def test_search():
+    """Test both OpenAI and database access with a simple query."""
+    try:
+        # First test OpenAI
+        logger.info("Testing OpenAI API...")
+        api_key = check_api_key()
+        client = OpenAI(api_key=api_key)
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input="test",
+            encoding_format="float"
+        )
+        test_embedding = np.array(response.data[0].embedding)
+        logger.info("Successfully got test embedding from OpenAI")
+        
+        # Then test database
+        logger.info("Testing database access...")
+        db = next(get_db())
+        embedding_service = EmbeddingService(db)
+        
+        # Try to find one similar movie
+        similar_movies = embedding_service.get_similar_movies(
+            query_embedding=test_embedding,
+            limit=1,
+            threshold=0.0  # No threshold to ensure we get at least one result
+        )
+        logger.info("Successfully queried database")
+        
+        return jsonify({
+            'status': 'ok',
+            'openai_working': True,
+            'database_working': True,
+            'found_movies': len(similar_movies),
+            'sample_movie': similar_movies[0] if similar_movies else None
+        })
+    except Exception as e:
+        logger.error(f"Test search failed: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'traceback': traceback.format_exc()
         }), 500 
