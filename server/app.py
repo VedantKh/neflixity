@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from routes.vector_search import vector_search
+from routes.embeddings import embeddings
 from db.config import get_db, engine
 from sqlalchemy import text, inspect
 import logging
@@ -23,6 +24,7 @@ CORS(app)
 
 # Register blueprints
 app.register_blueprint(vector_search)
+app.register_blueprint(embeddings)
 
 @app.before_request
 def before_request():
