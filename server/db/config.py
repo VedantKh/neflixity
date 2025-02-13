@@ -5,6 +5,10 @@ import os
 import getpass
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file in development
 if os.getenv('RAILWAY_ENVIRONMENT') != 'production':
@@ -34,6 +38,7 @@ if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
         pool_pre_ping=True,  # Enable connection health checks
         echo=False  # Disable SQL logging in production
     )
+    logger.info("Configured database engine for production")
 else:
     # Development settings
     engine = create_engine(
@@ -44,6 +49,7 @@ else:
         pool_recycle=1800,
         echo=bool(os.getenv('SQL_ECHO', True))  # Enable SQL logging by default in development
     )
+    logger.info("Configured database engine for development")
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -51,10 +57,17 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Create base class for declarative models
 Base = declarative_base()
 
+# Generator function for database sessions
 def get_db():
-    """Get database session."""
+    """Get a database session with proper error handling and cleanup."""
     db = SessionLocal()
     try:
+        logger.debug("Creating new database session")
         yield db
+    except Exception as e:
+        logger.error(f"Database session error: {str(e)}")
+        db.rollback()
+        raise
     finally:
+        logger.debug("Closing database session")
         db.close() 

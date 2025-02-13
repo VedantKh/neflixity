@@ -224,4 +224,146 @@ def test_search():
             'status': 'error',
             'error': str(e),
             'traceback': traceback.format_exc()
-        }), 500 
+        }), 500
+
+@vector_search.route('/api/test_search_steps', methods=['GET'])
+def test_search_steps():
+    """Test vector search step by step."""
+    try:
+        result = {'steps': []}
+        
+        # Step 1: Check OpenAI API key
+        try:
+            logger.info("Step 1: Checking OpenAI API key...")
+            api_key = check_api_key()
+            result['steps'].append({
+                'step': 1,
+                'name': 'Check OpenAI API key',
+                'status': 'success'
+            })
+        except Exception as e:
+            logger.error(f"Step 1 failed: {str(e)}")
+            result['steps'].append({
+                'step': 1,
+                'name': 'Check OpenAI API key',
+                'status': 'error',
+                'error': str(e)
+            })
+            raise
+        
+        # Step 2: Create OpenAI client
+        try:
+            logger.info("Step 2: Creating OpenAI client...")
+            client = get_openai_client()
+            result['steps'].append({
+                'step': 2,
+                'name': 'Create OpenAI client',
+                'status': 'success'
+            })
+        except Exception as e:
+            logger.error(f"Step 2 failed: {str(e)}")
+            result['steps'].append({
+                'step': 2,
+                'name': 'Create OpenAI client',
+                'status': 'error',
+                'error': str(e)
+            })
+            raise
+        
+        # Step 3: Get test embedding
+        try:
+            logger.info("Step 3: Getting test embedding...")
+            response = client.embeddings.create(
+                model="text-embedding-3-small",
+                input="test",
+                encoding_format="float"
+            )
+            test_embedding = np.array(response.data[0].embedding)
+            result['steps'].append({
+                'step': 3,
+                'name': 'Get test embedding',
+                'status': 'success',
+                'embedding_size': len(test_embedding)
+            })
+        except Exception as e:
+            logger.error(f"Step 3 failed: {str(e)}")
+            result['steps'].append({
+                'step': 3,
+                'name': 'Get test embedding',
+                'status': 'error',
+                'error': str(e)
+            })
+            raise
+        
+        # Step 4: Get database session
+        try:
+            logger.info("Step 4: Getting database session...")
+            db = next(get_db())
+            result['steps'].append({
+                'step': 4,
+                'name': 'Get database session',
+                'status': 'success'
+            })
+        except Exception as e:
+            logger.error(f"Step 4 failed: {str(e)}")
+            result['steps'].append({
+                'step': 4,
+                'name': 'Get database session',
+                'status': 'error',
+                'error': str(e)
+            })
+            raise
+        
+        # Step 5: Create embedding service
+        try:
+            logger.info("Step 5: Creating embedding service...")
+            embedding_service = EmbeddingService(db)
+            result['steps'].append({
+                'step': 5,
+                'name': 'Create embedding service',
+                'status': 'success'
+            })
+        except Exception as e:
+            logger.error(f"Step 5 failed: {str(e)}")
+            result['steps'].append({
+                'step': 5,
+                'name': 'Create embedding service',
+                'status': 'error',
+                'error': str(e)
+            })
+            raise
+        
+        # Step 6: Find similar movies
+        try:
+            logger.info("Step 6: Finding similar movies...")
+            similar_movies = embedding_service.get_similar_movies(
+                query_embedding=test_embedding,
+                limit=1,
+                threshold=0.0
+            )
+            result['steps'].append({
+                'step': 6,
+                'name': 'Find similar movies',
+                'status': 'success',
+                'found_movies': len(similar_movies)
+            })
+        except Exception as e:
+            logger.error(f"Step 6 failed: {str(e)}")
+            result['steps'].append({
+                'step': 6,
+                'name': 'Find similar movies',
+                'status': 'error',
+                'error': str(e)
+            })
+            raise
+        
+        result['status'] = 'success'
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Test search steps failed: {str(e)}")
+        logger.error(traceback.format_exc())
+        result['status'] = 'error'
+        result['error'] = str(e)
+        result['traceback'] = traceback.format_exc()
+        return jsonify(result), 500 
