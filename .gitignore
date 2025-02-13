@@ -59,7 +59,3 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
-
-# Project specific
-/client/src/data/raw_data/
-/server/embeddings/
