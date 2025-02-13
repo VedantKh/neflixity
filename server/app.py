@@ -21,6 +21,10 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
+# Configure for large file uploads
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
+app.config['UPLOAD_FOLDER'] = '/tmp'  # Temporary storage for uploads
+
 # Register blueprints
 logger.info("Registering blueprints...")
 app.register_blueprint(vector_search, url_prefix='')  # No prefix to match the client's expectations
