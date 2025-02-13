@@ -29,6 +29,7 @@ __pycache__/
 .Python
 /server/env/
 /server/venv/
+/server/embeddings/
 /server/.env
 /server/*.log
 .pytest_cache/
