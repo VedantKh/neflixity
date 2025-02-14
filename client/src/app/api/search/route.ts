@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     // Search in Supabase using the match_movies function with a lower threshold
     const { data, error } = await supabaseAdmin.rpc("match_movies", {
       query_embedding: embedding,
-      match_threshold: 0.3, // Lowered threshold for more results
+      match_threshold: 0.0, // Lowered threshold for more results
       match_count: 20, // Increased count to get more candidates
     });
 
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
     }
 
     // Filter results by similarity score if needed
-    const filteredResults = data.filter((result) => result.similarity > 0.3);
+    const filteredResults = data.filter((result) => result.similarity > 0.0);
 
     console.log("Found matches:", filteredResults.length);
     return NextResponse.json({
