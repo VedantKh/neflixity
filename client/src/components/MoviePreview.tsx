@@ -78,7 +78,11 @@ export default function MoviePreview({ movie }: MoviePreviewProps) {
 
             {/* Release date and other details */}
             <div className="flex items-center gap-4 text-sm text-white/50 font-medium tracking-wide">
-              <span>{new Date(movie.release_date).getFullYear()}</span>
+              <span>
+                {movie.release_date
+                  ? new Date(movie.release_date).getFullYear()
+                  : "N/A"}
+              </span>
               <span className="text-white/30">•</span>
               <span>{movie.original_language.toUpperCase()}</span>
             </div>
