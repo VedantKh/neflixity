@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MovieObject } from "@/types/movie";
 import KeywordObject from "@/types/keyword";
 import GenreObject from "@/types/genre";
@@ -15,168 +15,101 @@ interface SearchProps {
 export default function Search({ onSearchResults }: SearchProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [genres, setGenres] = useState<GenreObject[]>([]);
-  const [keywords, setKeywords] = useState<KeywordObject[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [documents, setDocuments] = useState<string[]>([]);
-  const [movieIds, setMovieIds] = useState<number[]>([]);
   const [isVectorSearching, setIsVectorSearching] = useState(false);
   const [searchProgress, setSearchProgress] = useState<string>("");
-  const [totalMovies, setTotalMovies] = useState<number>(0);
   const [foundIndices, setFoundIndices] = useState<boolean>(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!searchTerm.trim()) return;
 
     setIsSearching(true);
+    setIsVectorSearching(true);
+    setSearchProgress("Searching for similar movies...");
+
     try {
-      console.log("Starting search with documents:", documents.length);
-      console.log("Number of movie IDs:", movieIds.length);
-      console.log("First few movie IDs:", movieIds.slice(0, 5));
+      // Call our new Next.js API endpoint for vector search
+      const semanticResponse = await fetch("/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: searchTerm,
+        }),
+      });
 
-      // Perform semantic search if documents are loaded
-      if (documents.length > 0) {
-        setIsVectorSearching(true);
-        setSearchProgress(`Analyzing ${documents.length} movies...`);
-        setTotalMovies(documents.length);
+      if (!semanticResponse.ok) {
+        throw new Error(`Search failed: ${semanticResponse.statusText}`);
+      }
 
-        const semanticResponse = await fetch(
-          "http://localhost:8080/api/vector_search",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              query: searchTerm,
-              documents: documents,
-              ids: movieIds,
-            }),
-          }
+      const semanticResults = await semanticResponse.json();
+
+      if (!semanticResults.results || !Array.isArray(semanticResults.results)) {
+        throw new Error("Invalid search results format");
+      }
+
+      setSearchProgress("Found matching movies, retrieving details...");
+      setFoundIndices(true);
+
+      // Extract movie IDs from the results
+      const semanticMovieIds = semanticResults.results.map((r: any) => r.id);
+
+      // Create a map of movie IDs to their similarity scores
+      const idToScore = new Map(
+        semanticResults.results.map((r: any) => [r.id, r.similarity])
+      );
+
+      // Fetch movie details for the found IDs
+      const movieDetailsResponse = await fetch("/api/movies-by-ids", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ids: semanticMovieIds,
+        }),
+      });
+
+      if (!movieDetailsResponse.ok) {
+        throw new Error(
+          `Failed to fetch movie details: ${movieDetailsResponse.statusText}`
         );
+      }
 
-        const semanticResults = await semanticResponse.json();
-        setSearchProgress("Found matching movies, retrieving details...");
-        setFoundIndices(true);
+      const { movies } = await movieDetailsResponse.json();
 
-        // Create a map of movie IDs to their scores
-        const idToScore = new Map(
-          semanticResults.results.map((r: any) => [r.movie_id, r.score])
-        );
+      if (!movies || !Array.isArray(movies)) {
+        throw new Error("Invalid movie details format");
+      }
 
-        const semanticMovieIds = semanticResults.results.map(
-          (r: any) => r.movie_id
-        );
-        console.log("Retrieved movie IDs:", semanticMovieIds);
+      // Add similarity scores to movies
+      const moviesWithScores = movies.map((movie: MovieObject) => ({
+        ...movie,
+        score: idToScore.get(movie.id) || 0,
+      })) as MovieObject[];
 
-        const movieDetailsResponse = await fetch("/api/movies-by-ids", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ids: semanticMovieIds,
-          }),
-        });
+      // Sort by popularity and score
+      const sortedByPopularity = moviesWithScores
+        .sort((a: MovieObject, b: MovieObject) => b.popularity - a.popularity)
+        .slice(0, 10);
 
-        const { movies } = await movieDetailsResponse.json();
+      const finalResults = sortedByPopularity.sort(
+        (a: MovieObject, b: MovieObject) => (b.score || 0) - (a.score || 0)
+      );
 
-        // Add scores to movies and sort by score
-        const moviesWithScores = movies.map((movie: MovieObject) => ({
-          ...movie,
-          score: idToScore.get(movie.id) || 0,
-        }));
-
-        // First sort by popularity
-        const sortedByPopularity = moviesWithScores
-          .sort((a: MovieObject, b: MovieObject) => b.popularity - a.popularity)
-          .slice(0, 10);
-
-        // Then sort those top 10 by semantic similarity score
-        const finalResults = sortedByPopularity.sort(
-          (a: MovieObject, b: MovieObject) => (b.score || 0) - (a.score || 0)
-        );
-
-        console.log("Final sorted movies data:", finalResults);
-
-        if (onSearchResults) {
-          onSearchResults(finalResults, finalResults);
-        }
+      if (onSearchResults) {
+        onSearchResults(finalResults, finalResults);
       }
     } catch (error) {
       console.error("Failed to search movies:", error);
+      setSearchProgress("Search failed. Please try again.");
     } finally {
       setIsSearching(false);
       setIsVectorSearching(false);
-      setSearchProgress("");
       setFoundIndices(false);
     }
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [moviesResponse, keywordsResponse] = await Promise.all([
-          fetch("/api/movie_data"),
-          fetch("/api/keyword_data"),
-        ]);
-
-        const [moviesData, keywordsData] = await Promise.all([
-          moviesResponse.json(),
-          keywordsResponse.json(),
-        ]);
-
-        const embedResponse = await fetch(
-          "http://localhost:8080/api/make_embeddings",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              movies: moviesData,
-              keywords: keywordsData,
-            }),
-          }
-        );
-
-        const { documents: preparedDocs, ids: preparedIds } =
-          await embedResponse.json();
-        setDocuments(preparedDocs);
-        setMovieIds(preparedIds);
-      } catch (error) {
-        console.error("Error loading documents:", error);
-      }
-    };
-
-    const fetchGenres = async () => {
-      try {
-        const response = await fetch("/api/genres");
-        const data = await response.json();
-        setGenres(data.genres);
-      } catch (error) {
-        console.error("Failed to fetch genres:", error);
-      }
-    };
-
-    const fetchKeywords = async () => {
-      try {
-        const response = await fetch("/api/keywords");
-        const data = await response.json();
-        setKeywords(data.keywords);
-      } catch (error) {
-        console.error("Failed to fetch keywords:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-    fetchGenres();
-    fetchKeywords();
-  }, []);
 
   return (
     <div className="w-full max-w-2xl">

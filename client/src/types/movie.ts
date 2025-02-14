@@ -6,7 +6,7 @@ export interface MovieObject {
   tagline: string | null; // need to add to MovieModal
   overview: string;
   poster_path: string | null;
-  release_date: string;
+  release_date: string | null;
   vote_average: number;
   genres: GenreObject[];
   adult: boolean;
