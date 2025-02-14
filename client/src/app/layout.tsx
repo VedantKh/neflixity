@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   title: "netflixity.",
   description: "A semantic movie search engine",
   icons: {
-    icon: "/movie_favicon.png",
-    shortcut: "/movie_favicon.png",
-    apple: "/movie_favicon.png",
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
   },
 };
 

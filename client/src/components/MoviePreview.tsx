@@ -15,7 +15,7 @@ export default function MoviePreview({ movie }: MoviePreviewProps) {
     <>
       <div
         onClick={() => setIsModalOpen(true)}
-        className="group relative w-full min-w-[350px] max-w-lg rounded-[32px] overflow-visible hover:scale-[1.02] transition-all duration-300 mx-auto cursor-pointer"
+        className="group relative w-full min-w-[350px] sm:min-w-[350px] max-w-lg rounded-[32px] overflow-visible hover:scale-[1.02] transition-all duration-300 mx-auto cursor-pointer"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -23,11 +23,13 @@ export default function MoviePreview({ movie }: MoviePreviewProps) {
         <div className="absolute inset-1 bg-[#1A1A1A]/40 backdrop-blur-xl rounded-[32px] shadow-xl" />
 
         {/* Hover overlay mask */}
-        <div className="absolute inset-1 bg-black/80 backdrop-blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 flex items-center justify-center gap-12 rounded-[32px]">
+        <div className="absolute inset-1 bg-black/80 backdrop-blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 flex items-center justify-center gap-6 sm:gap-12 rounded-[32px]">
           {/* Rating */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-yellow-400 text-3xl mb-0.5">★</span>
-            <span className="text-white/90 font-medium text-xl tracking-tight">
+            <span className="text-yellow-400 text-2xl sm:text-3xl mb-0.5">
+              ★
+            </span>
+            <span className="text-white/90 font-medium text-lg sm:text-xl tracking-tight">
               {movie.vote_average.toFixed(1)}
             </span>
             <span className="text-white/50 text-[10px] font-medium uppercase tracking-wider">
@@ -37,8 +39,10 @@ export default function MoviePreview({ movie }: MoviePreviewProps) {
 
           {/* Vote Count */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-blue-400 text-3xl mb-0.5">👥</span>
-            <span className="text-white/90 font-medium text-xl tracking-tight">
+            <span className="text-blue-400 text-2xl sm:text-3xl mb-0.5">
+              👥
+            </span>
+            <span className="text-white/90 font-medium text-lg sm:text-xl tracking-tight">
               {movie.vote_count.toLocaleString()}
             </span>
             <span className="text-white/50 text-[10px] font-medium uppercase tracking-wider">
@@ -48,8 +52,10 @@ export default function MoviePreview({ movie }: MoviePreviewProps) {
 
           {/* Popularity */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-emerald-400 text-3xl mb-0.5">📈</span>
-            <span className="text-white/90 font-medium text-xl tracking-tight">
+            <span className="text-emerald-400 text-2xl sm:text-3xl mb-0.5">
+              📈
+            </span>
+            <span className="text-white/90 font-medium text-lg sm:text-xl tracking-tight">
               {movie.popularity.toFixed(0)}
             </span>
             <span className="text-white/50 text-[10px] font-medium uppercase tracking-wider">

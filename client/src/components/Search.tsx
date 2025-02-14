@@ -92,7 +92,7 @@ export default function Search({ onSearchResults }: SearchProps) {
       // Sort by popularity and score
       const sortedByPopularity = moviesWithScores
         .sort((a: MovieObject, b: MovieObject) => b.popularity - a.popularity)
-        .slice(0, 10);
+        .slice(0, 12);
 
       const finalResults = sortedByPopularity.sort(
         (a: MovieObject, b: MovieObject) => (b.score || 0) - (a.score || 0)

@@ -91,7 +91,7 @@ export async function POST(req: Request) {
     // Then remove 10 least popular movies and sort by similarity
     const processedResults = filteredResults
       .sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0)) // Sort by vote_count descending
-      .slice(10) // Remove 10 least popular movies
+      .slice(8)
       .sort((a, b) => b.similarity - a.similarity); // Sort by similarity descending
 
     console.log("Found matches:", processedResults.length);
