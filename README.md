@@ -10,12 +10,16 @@ Data accessed from [TMDb](https://www.themoviedb.org/) in accordance with their 
 ### Data Quality
 - [ ] Filter out movies with vote_count below 50 
 - [ ] Filter out movies with popularity below 1
+- [ ] Make movies_metadata.csv hold only 12 top searches for home page
+- [ ] Check existing function to see if keywords were actually embedded
+
 
 ### UI/UX Improvements
 - [ ] Fix MovieModal responsiveness in mobile view
 - [ ] Add Search button
 - [ ] Implement typewriter animation for example prompts
 - [ ] Display post-hoc generation using RAG
+- [ ] Add animations
 
 ### Testing
 - [ ] Conduct stress testing
