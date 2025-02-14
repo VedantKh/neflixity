@@ -57,8 +57,10 @@ export default function MovieModal({
               <p className="text-lg text-white/60 italic">{movie.tagline}</p>
             )}
             <p className="text-white/70 font-regular">
-              {new Date(movie.release_date).getFullYear()} •{" "}
-              {movie.original_language.toUpperCase()}
+              {movie.release_date
+                ? new Date(movie.release_date).getFullYear()
+                : "N/A"}{" "}
+              • {movie.original_language.toUpperCase()}
             </p>
           </div>
 
