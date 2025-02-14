@@ -124,11 +124,11 @@ export async function GET(request: Request) {
     // Sort by rating and popularity as before
     const topMoviesByRating = filteredMovies
       .sort((a, b) => b.vote_average - a.vote_average)
-      .slice(0, 10);
+      .slice(0, 12);
 
     const topMoviesByPopularity = filteredMovies
       .sort((a, b) => b.popularity - a.popularity)
-      .slice(0, 10);
+      .slice(0, 12);
 
     return NextResponse.json({
       moviesByRating: topMoviesByRating,
