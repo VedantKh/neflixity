@@ -81,9 +81,16 @@ export async function POST(req: Request) {
     // Filter results by similarity score if needed
     const filteredResults = data.filter((result) => result.similarity > 0.0);
 
-    console.log("Found matches:", filteredResults.length);
+    // Sort by popularity (assuming higher vote_count means more popular)
+    // Then remove 10 least popular movies and sort by similarity
+    const processedResults = filteredResults
+      .sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0)) // Sort by vote_count descending
+      .slice(10) // Remove 10 least popular movies
+      .sort((a, b) => b.similarity - a.similarity); // Sort by similarity descending
+
+    console.log("Found matches:", processedResults.length);
     return NextResponse.json({
-      results: filteredResults.slice(0, 10), // Return top 10 results
+      results: processedResults,
     });
   } catch (error: any) {
     console.error("API error:", error);
