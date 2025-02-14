@@ -6,6 +6,12 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Filter out all movies with vote_count below 50 
+// Filter out all movies with popularity below 1
+
+// in UI, show example types of prompts in typewriter format
+// same UI show generation post hoc (RAG)
+
 export async function POST(req: Request) {
   if (!process.env.OPENAI_API_KEY) {
     console.error("OpenAI API key not configured");
