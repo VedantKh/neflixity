@@ -101,7 +101,7 @@ export default function Search({ onSearchResults }: SearchProps) {
       <div className="h-20 relative">
         {isVectorSearching && <LoadingSpinner message={searchProgress} />}
         {showExamples && !isVectorSearching && (
-          <div className="mt-4">
+          <div className="mt-4 pl-4 pr-4">
             <ExamplePrompts prompts={examplePrompts} />
           </div>
         )}
