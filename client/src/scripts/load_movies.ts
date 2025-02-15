@@ -142,12 +142,21 @@ async function processMovie(
     // Parse genres from JSON string
     const fixedGenresJson = fixJsonString(row.genres || "[]");
     const genres = JSON.parse(fixedGenresJson) as GenreObject[];
+    const genreNames = genres.map((g) => g.name).join(", ");
 
     // Get keywords for this movie
     const keywords = keywordsMap.get(movieId) || [];
 
+    // Extract year from release date
+    const releaseYear = row.release_date
+      ? new Date(row.release_date).getFullYear()
+      : null;
+    const yearText = releaseYear ? `Year: ${releaseYear}. ` : "";
+
     // Create embedding text
-    const embeddingText = `Title: ${row.title}. Description: ${
+    const embeddingText = `Title: ${
+      row.title
+    }. ${yearText}Genres: ${genreNames}. Description: ${
       row.overview
     }. Keywords: ${keywords.join(", ")}`;
 
@@ -179,7 +188,9 @@ async function processMovie(
     };
 
     // Insert into Supabase
-    const { error } = await supabaseAdmin.from("movies_new").insert(movieObject);
+    const { error } = await supabaseAdmin
+      .from("movies_new")
+      .insert(movieObject);
 
     if (error) {
       throw error;
