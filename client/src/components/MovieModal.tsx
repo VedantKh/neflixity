@@ -83,7 +83,7 @@ export default function MovieModal({
           {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-2 sm:gap-6 pt-2 sm:pt-4">
             {/* Rating */}
-            <div className="space-y-1 text-center p-3 sm:p-4 rounded-2xl bg-black/40 sm:bg-white/5 backdrop-blur-sm border border-white/10">
+            <div className="space-y-1 text-center p-3 sm:p-4 rounded-2xl bg-black/60 sm:bg-white/5 backdrop-blur-sm border border-white/10">
               <span className="text-lg sm:text-xl md:text-2xl text-yellow-400">
                 ★
               </span>
@@ -96,7 +96,7 @@ export default function MovieModal({
             </div>
 
             {/* Vote Count */}
-            <div className="space-y-1 text-center p-3 sm:p-4 rounded-2xl bg-black/40 sm:bg-white/5 backdrop-blur-sm border border-white/10">
+            <div className="space-y-1 text-center p-3 sm:p-4 rounded-2xl bg-black/60 sm:bg-white/5 backdrop-blur-sm border border-white/10">
               <span className="text-lg sm:text-xl md:text-2xl text-blue-400">
                 👥
               </span>
@@ -109,7 +109,7 @@ export default function MovieModal({
             </div>
 
             {/* Popularity */}
-            <div className="space-y-1 text-center p-3 sm:p-4 rounded-2xl bg-black/40 sm:bg-white/5 backdrop-blur-sm border border-white/10">
+            <div className="space-y-1 text-center p-3 sm:p-4 rounded-2xl bg-black/60 sm:bg-white/5 backdrop-blur-sm border border-white/10">
               <span className="text-lg sm:text-xl md:text-2xl text-emerald-400">
                 📈
               </span>
