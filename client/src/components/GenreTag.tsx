@@ -13,13 +13,13 @@ const genreColors: {
     border: "border-orange-500/5",
   },
   Adventure: {
-    bg: "bg-amber-500/5", 
+    bg: "bg-amber-500/5",
     text: "text-amber-400",
     border: "border-amber-500/5",
   },
   Animation: {
     bg: "bg-blue-400/5",
-    text: "text-blue-300", 
+    text: "text-blue-300",
     border: "border-blue-400/5",
   },
   Comedy: {
@@ -110,17 +110,15 @@ const genreColors: {
 };
 
 export default function GenreTag({ genre }: GenreTagProps) {
-  const colors = genreColors[genre.name] || {
-    bg: "bg-white/[0.06]",
-    text: "text-white/70",
-    border: "border-white/[0.06]",
-  };
-
   return (
-    <span
-      className={`px-3.5 py-1.5 text-xs font-regular rounded-full ${colors.bg} ${colors.text} backdrop-blur-md border ${colors.border} shadow-sm tracking-wide`}
+    <div
+      className={`px-3 py-1 rounded-lg text-sm font-medium ${
+        genreColors[genre.name]?.bg || "bg-black/40 sm:bg-white/5"
+      } ${genreColors[genre.name]?.text || "text-white/80"} ${
+        genreColors[genre.name]?.border || "border-white/10"
+      } backdrop-blur-sm border`}
     >
       {genre.name}
-    </span>
+    </div>
   );
 }
