@@ -22,18 +22,18 @@ export default function MovieStack({
         <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 hidden sm:block" />
 
         {/* Grid container */}
-        <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6 pb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6 pb-4 px-4">
           {isLoading ? (
             // Show loading
-            <div className="pl-4">
+            <div>
               <div className="w-full min-w-[350px] max-w-lg h-[158px] rounded-[32px] bg-white/[0.06] animate-pulse flex items-center justify-center">
                 <div className="w-8 h-8 border-4 border-white/20 border-t-white/80 rounded-full animate-spin" />
               </div>
             </div>
           ) : movies.length > 0 ? (
             // Show movies
-            movies.map((movie, index) => (
-              <div key={movie.id} className={`${index === 0 ? "pl-4" : ""}`}>
+            movies.map((movie) => (
+              <div key={movie.id}>
                 <div className="min-w-[350px] max-w-lg mx-auto">
                   <MoviePreview movie={movie} />
                 </div>
@@ -41,7 +41,7 @@ export default function MovieStack({
             ))
           ) : (
             // Show message if no movies
-            <div className="flex items-center justify-center w-full min-h-[400px] text-foreground/70 pl-4">
+            <div className="flex items-center justify-center w-full min-h-[400px] text-foreground/70">
               No movies found
             </div>
           )}
