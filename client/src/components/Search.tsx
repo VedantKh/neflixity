@@ -32,8 +32,8 @@ export default function Search({ onSearchResults }: SearchProps) {
     e.preventDefault();
     if (!searchTerm.trim()) return;
 
-    setIsSearching(true);
     setIsVectorSearching(true);
+    setIsSearching(true);
     setSearchProgress("Searching for similar movies...");
 
     try {
@@ -82,9 +82,11 @@ export default function Search({ onSearchResults }: SearchProps) {
 
   return (
     <div className="w-full max-w-2xl">
-      <form onSubmit={handleSearch} className="w-full">
+      <form onSubmit={handleSearch} className="w-full relative">
         <input
-          type="text"
+          type="search"
+          inputMode="search"
+          enterKeyHint="search"
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
@@ -92,11 +94,34 @@ export default function Search({ onSearchResults }: SearchProps) {
           }}
           placeholder="Search movies..."
           autoFocus
-          className="w-full mt-4 px-6 py-3 rounded-2xl bg-white/[0.07] text-white/90 
+          className="w-full mt-4 px-6 py-3 pr-12 rounded-2xl bg-white/[0.07] text-white/90 
             placeholder:text-white/40 outline-none focus:bg-white/[0.09] 
             backdrop-blur-xl shadow-lg
             transition-all duration-300 focus:scale-[1.01]"
         />
+        <button
+          type="submit"
+          className="absolute right-3 top-1/2 mt-2 -translate-y-1/2 p-2 
+            text-white/60 hover:text-white/90 transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-white/20 rounded-xl
+            sm:hidden" // Only show on mobile
+          aria-label="Search"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
       </form>
       <div className="h-20 relative">
         {isVectorSearching && <LoadingSpinner message={searchProgress} />}
