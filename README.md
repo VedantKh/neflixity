@@ -1,6 +1,6 @@
 # Netflixity
 
-A modern movie discovery platform with semantic search capabilities powered by OpenAI embeddings. Built with Next.js and Flask, this application provides an intuitive interface for finding movies based on natural language queries.
+Think of a story vibe and Netflixity will find a movie based on that. Built with Next.js and pgvector on Supabase, this was a fun project.
 
 [Deployed Website](https://neflixity.vercel.app/)
 ![Example](screenshot.png)
@@ -8,28 +8,15 @@ A modern movie discovery platform with semantic search capabilities powered by O
 ## Features
 
 - 🎬 Semantic movie search using OpenAI embeddings
-- 🔍 Uses pgvector with HNSW indexing under the hood
+- 🔍 Uses pgvector with HNSW indexing over movie descriptor strings
 
 ## Project Structure
-
-```
-client/
-├── src/
-│ ├── app/         # Next.js app directory
-│ │ ├── api/       # API routes
-│ │ └── page.tsx   # Main page
-│ ├── components/  # React components
-│ ├── scripts/     # Data processing scripts
-│ ├── types/       # TypeScript definitions
-│ └── utils/       # Utility functions
-```
 
 ## Prerequisites
 
 - Node.js (v18 or higher)
 - npm or yarn
 - OpenAI API key
-- TMDb API key (for data updates)
 
 ## Getting Started
 
