@@ -77,7 +77,7 @@ export default function MovieModal({
           </p>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-6 pt-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-6 pt-4">
             {/* Rating */}
             <div className="space-y-1 text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
               <span className="text-yellow-400 text-xl md:text-2xl">★</span>

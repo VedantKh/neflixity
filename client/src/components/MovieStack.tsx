@@ -22,7 +22,7 @@ export default function MovieStack({
         <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 hidden sm:block" />
 
         {/* Grid container */}
-        <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6 pb-4 px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6 pb-4 sm:px-4">
           {isLoading ? (
             // Show loading
             <div>
