@@ -3,6 +3,7 @@
 A modern movie discovery platform with semantic search capabilities powered by OpenAI embeddings. Built with Next.js and Flask, this application provides an intuitive interface for finding movies based on natural language queries.
 
 [Deployed Website](https://neflixity.vercel.app/)
+![Example](screenshot.png)
 
 ## Features
 
