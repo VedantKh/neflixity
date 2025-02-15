@@ -28,10 +28,14 @@ export async function POST(req: Request) {
 
     console.log("Generating embedding for query:", query);
 
+    // Format query to match stored embedding format
+    const formattedQuery = `Title: ${query}`;
+    console.log("Formatted query:", formattedQuery);
+
     // Generate embedding for the search query
     const embeddingResponse = await openai.embeddings.create({
       model: "text-embedding-3-small",
-      input: query,
+      input: formattedQuery,
     });
 
     const embedding = embeddingResponse.data[0].embedding;
@@ -40,8 +44,9 @@ export async function POST(req: Request) {
     // Search in Supabase using the match_movies function with a lower threshold
     const { data, error } = await supabaseAdmin.rpc("match_movies", {
       query_embedding: embedding,
-      match_threshold: 0.0, // Lowered threshold for more results
-      match_count: 20, // Increased count to get more candidates
+      match_threshold: -1.0, // Even more permissive threshold
+      match_count: 50, // Get more candidates
+      min_vote_count: 10, // Lower minimum vote count
     });
 
     if (error) {
@@ -78,15 +83,33 @@ export async function POST(req: Request) {
       );
     }
 
-    // Filter results by similarity score if needed
-    const filteredResults = data.filter((result) => result.similarity > 0.0);
+    // Log raw results
+    console.log("Raw results:", JSON.stringify(data.slice(0, 3), null, 2));
 
-    // Sort by popularity (assuming higher vote_count means more popular)
-    // Then remove 10 least popular movies and sort by similarity
-    const processedResults = filteredResults
-      .sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0)) // Sort by vote_count descending
-      .slice(8)
-      .sort((a, b) => b.similarity - a.similarity); // Sort by similarity descending
+    // Filter results by similarity score if needed - using a very low threshold
+    const filteredResults = data.filter((result) => result.similarity > -1.0);
+    console.log("After similarity filter:", filteredResults.length, "results");
+    console.log(
+      "Top 3 similarities:",
+      filteredResults.slice(0, 3).map((r) => r.similarity)
+    );
+
+    // First sort by similarity, then use popularity as a tiebreaker
+    const processedResults = filteredResults.sort((a, b) => {
+      // First sort by similarity
+      const similarityDiff = b.similarity - a.similarity;
+      if (Math.abs(similarityDiff) > 0.01) {
+        // If similarity difference is significant
+        return similarityDiff;
+      }
+      // Use popularity as tiebreaker
+      return (b.vote_count || 0) - (a.vote_count || 0);
+    });
+
+    console.log(
+      "Final top 3 results:",
+      JSON.stringify(processedResults.slice(0, 3), null, 2)
+    );
 
     console.log("Found matches:", processedResults.length);
     return NextResponse.json({

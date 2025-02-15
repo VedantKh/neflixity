@@ -22,7 +22,7 @@ export default function Home() {
         : "/api/movies";
       const response = await fetch(url);
       const data = await response.json();
-      setMoviesRatingsList(data.moviesByRating);
+      setMoviesRatingsList(data.moviesByPopularity);
     } catch (error) {
       console.error("Failed to fetch movies:", error);
     } finally {

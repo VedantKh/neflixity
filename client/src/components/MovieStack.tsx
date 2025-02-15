@@ -33,10 +33,7 @@ export default function MovieStack({
           ) : movies.length > 0 ? (
             // Show movies
             movies.map((movie, index) => (
-              <div
-                key={movie.id}
-                className={`${index === 0 ? "pl-4" : ""}`}
-              >
+              <div key={movie.id} className={`${index === 0 ? "pl-4" : ""}`}>
                 <div className="min-w-[350px] max-w-lg mx-auto">
                   <MoviePreview movie={movie} />
                 </div>
