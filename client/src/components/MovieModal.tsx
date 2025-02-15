@@ -79,7 +79,7 @@ export default function MovieModal({
           {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-2 sm:gap-6 pt-4">
             {/* Rating */}
-            <div className="space-y-1 text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+            <div className="space-y-1 text-center p-4 rounded-2xl bg-black/40 border border-white/10">
               <span className="text-yellow-400 text-xl md:text-2xl">★</span>
               <p className="text-white font-regular text-lg md:text-xl">
                 {movie.vote_average.toFixed(1)}
@@ -90,7 +90,7 @@ export default function MovieModal({
             </div>
 
             {/* Vote Count */}
-            <div className="space-y-1 text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+            <div className="space-y-1 text-center p-4 rounded-2xl bg-black/40 border border-white/10">
               <span className="text-blue-400 text-xl md:text-2xl">👥</span>
               <p className="text-white font-regular text-lg md:text-xl">
                 {movie.vote_count.toLocaleString()}
@@ -101,7 +101,7 @@ export default function MovieModal({
             </div>
 
             {/* Popularity */}
-            <div className="space-y-1 text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+            <div className="space-y-1 text-center p-4 rounded-2xl bg-black/40 border border-white/10">
               <span className="text-emerald-400 text-xl md:text-2xl">📈</span>
               <p className="text-white font-regular text-lg md:text-xl">
                 {movie.popularity.toFixed(0)}

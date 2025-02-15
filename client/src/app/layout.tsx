@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "netflixity.",
   description: "A semantic movie search engine",
+  colorScheme: "dark",
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",

@@ -23,3 +23,10 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+  .modal-content {
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+}
