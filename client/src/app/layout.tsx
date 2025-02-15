@@ -16,15 +16,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "netflixity.",
   description: "A semantic movie search engine",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-  },
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",
     apple: "/icon.png",
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
