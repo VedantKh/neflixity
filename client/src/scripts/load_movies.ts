@@ -151,6 +151,9 @@ async function processMovie(
       row.overview
     }. Keywords: ${keywords.join(", ")}`;
 
+    // Add this line after creating embeddingText
+    console.log("\nEmbedding text:", embeddingText);
+
     // Generate embedding with retry logic
     const embedding = await generateEmbeddingWithRetry(embeddingText);
 
