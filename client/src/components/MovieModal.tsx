@@ -80,33 +80,33 @@ export default function MovieModal({
           <div className="grid grid-cols-3 gap-6 pt-4">
             {/* Rating */}
             <div className="space-y-1 text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-              <span className="text-yellow-400 text-2xl">★</span>
-              <p className="text-white font-regular text-xl">
+              <span className="text-yellow-400 text-xl md:text-2xl">★</span>
+              <p className="text-white font-regular text-lg md:text-xl">
                 {movie.vote_average.toFixed(1)}
               </p>
-              <p className="text-white/70 text-sm uppercase tracking-wider font-regular">
+              <p className="text-white/70 text-xs md:text-sm uppercase tracking-wider font-regular">
                 Rating
               </p>
             </div>
 
             {/* Vote Count */}
             <div className="space-y-1 text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-              <span className="text-blue-400 text-2xl">👥</span>
-              <p className="text-white font-regular text-xl">
+              <span className="text-blue-400 text-xl md:text-2xl">👥</span>
+              <p className="text-white font-regular text-lg md:text-xl">
                 {movie.vote_count.toLocaleString()}
               </p>
-              <p className="text-white/70 text-sm uppercase tracking-wider font-regular">
+              <p className="text-white/70 text-xs md:text-sm uppercase tracking-wider font-regular">
                 Votes
               </p>
             </div>
 
             {/* Popularity */}
             <div className="space-y-1 text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-              <span className="text-emerald-400 text-2xl">📈</span>
-              <p className="text-white font-regular text-xl">
+              <span className="text-emerald-400 text-xl md:text-2xl">📈</span>
+              <p className="text-white font-regular text-lg md:text-xl">
                 {movie.popularity.toFixed(0)}
               </p>
-              <p className="text-white/70 text-sm uppercase tracking-wider font-regular">
+              <p className="text-white/70 text-[10px] md:text-sm uppercase tracking-wider font-regular">
                 Popularity
               </p>
             </div>
@@ -133,7 +133,14 @@ export default function MovieModal({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+                  <rect
+                    x="2"
+                    y="2"
+                    width="20"
+                    height="20"
+                    rx="2.18"
+                    ry="2.18"
+                  />
                   <line x1="7" y1="2" x2="7" y2="22" />
                   <line x1="17" y1="2" x2="17" y2="22" />
                   <line x1="2" y1="12" x2="22" y2="12" />

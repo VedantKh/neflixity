@@ -4,6 +4,7 @@ import { MovieObject } from "@/types/movie";
 import KeywordObject from "@/types/keyword";
 import GenreObject from "@/types/genre";
 import LoadingSpinner from "./LoadingSpinner";
+import ExamplePrompts from "./ExamplePrompts";
 
 interface SearchProps {
   onSearchResults: (
@@ -18,6 +19,14 @@ export default function Search({ onSearchResults }: SearchProps) {
   const [isVectorSearching, setIsVectorSearching] = useState(false);
   const [searchProgress, setSearchProgress] = useState<string>("");
   const [foundIndices, setFoundIndices] = useState<boolean>(false);
+  const [showExamples, setShowExamples] = useState(true);
+
+  const examplePrompts = [
+    "movies about time travel and parallel universes",
+    "films with strong female leads fighting for justice",
+    "something with beautiful visuals and deep philosophical themes",
+    "artificial intelligence gone wrong",
+  ];
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +86,10 @@ export default function Search({ onSearchResults }: SearchProps) {
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setShowExamples(false);
+          }}
           placeholder="Search movies..."
           autoFocus
           className="w-full mt-4 px-6 py-3 rounded-2xl bg-white/[0.07] text-white/90 
@@ -88,6 +100,11 @@ export default function Search({ onSearchResults }: SearchProps) {
       </form>
       <div className="h-20 relative">
         {isVectorSearching && <LoadingSpinner message={searchProgress} />}
+        {showExamples && !isVectorSearching && (
+          <div className="mt-4">
+            <ExamplePrompts prompts={examplePrompts} />
+          </div>
+        )}
       </div>
     </div>
   );
