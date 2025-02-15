@@ -28,7 +28,7 @@ export default function Search({ onSearchResults }: SearchProps) {
     setSearchProgress("Searching for similar movies...");
 
     try {
-      // Call our new Next.js API endpoint for vector search
+      // Call our Next.js API endpoint for vector search
       const semanticResponse = await fetch("/api/search", {
         method: "POST",
         headers: {
@@ -43,62 +43,22 @@ export default function Search({ onSearchResults }: SearchProps) {
         throw new Error(`Search failed: ${semanticResponse.statusText}`);
       }
 
-      const semanticResults = await semanticResponse.json();
+      const { results } = await semanticResponse.json();
 
-      if (!semanticResults.results || !Array.isArray(semanticResults.results)) {
+      if (!results || !Array.isArray(results)) {
         throw new Error("Invalid search results format");
       }
 
-      setSearchProgress("Found matching movies, retrieving details...");
-      setFoundIndices(true);
+      // Results are already MovieObjects with similarity scores
+      const movies = results as MovieObject[];
 
-      // Extract movie IDs from the results
-      const semanticMovieIds = semanticResults.results.map((r: any) => r.id);
+      console.log(movies);
 
-      // Create a map of movie IDs to their similarity scores
-      const idToScore = new Map(
-        semanticResults.results.map((r: any) => [r.id, r.similarity])
-      );
-
-      // Fetch movie details for the found IDs
-      const movieDetailsResponse = await fetch("/api/movies-by-ids", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ids: semanticMovieIds,
-        }),
-      });
-
-      if (!movieDetailsResponse.ok) {
-        throw new Error(
-          `Failed to fetch movie details: ${movieDetailsResponse.statusText}`
-        );
-      }
-
-      const { movies } = await movieDetailsResponse.json();
-
-      if (!movies || !Array.isArray(movies)) {
-        throw new Error("Invalid movie details format");
-      }
-
-      // Add similarity scores to movies
-      const moviesWithScores = movies.map((movie: MovieObject) => ({
-        ...movie,
-        score: idToScore.get(movie.id) || 0,
-      })) as MovieObject[];
-
-      // Sort by popularity and score
-      const sortedByPopularity = moviesWithScores
-        .sort((a: MovieObject, b: MovieObject) => b.popularity - a.popularity)
-        .slice(0, 12);
-
-      const finalResults = sortedByPopularity.sort(
-        (a: MovieObject, b: MovieObject) => (b.score || 0) - (a.score || 0)
-      );
+      // Take top 12 results
+      const finalResults = movies.slice(0, 12);
 
       if (onSearchResults) {
+        // Pass the same results for both parameters since they're already sorted
         onSearchResults(finalResults, finalResults);
       }
     } catch (error) {

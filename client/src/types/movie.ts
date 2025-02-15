@@ -15,6 +15,7 @@ export interface MovieObject {
   vote_count: number;
   video: boolean;
   original_title: string;
-  score?: number; // need to add to MovieModal
+  similarity?: number; // need to add to MovieModal
   imdb_id: string;
+  embedding_text?: string;  // Add this line
 }

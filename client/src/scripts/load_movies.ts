@@ -116,7 +116,7 @@ async function generateEmbeddingWithRetry(
         // Get retry delay from headers or use default
         const retryAfter = parseInt(error?.headers?.["retry-after"] || "1");
         console.log(`Rate limited. Waiting ${retryAfter}s before retry...`);
-        await sleep(retryAfter * 1000);
+        await sleep(retryAfter * 300);
         continue;
       }
       throw error;
@@ -175,10 +175,11 @@ async function processMovie(
       original_title: row.original_title,
       imdb_id: row.imdb_id,
       embedding: embedding,
+      embedding_text: embeddingText,
     };
 
     // Insert into Supabase
-    const { error } = await supabaseAdmin.from("movies").insert(movieObject);
+    const { error } = await supabaseAdmin.from("movies_new").insert(movieObject);
 
     if (error) {
       throw error;
@@ -198,7 +199,7 @@ async function processAndLoadMovies(): Promise<void> {
 
   let processedCount = 0;
   let errorCount = 0;
-  const batchSize = 10; // Process 10 movies at a time
+  const batchSize = 50; // Process 50 movies at a time
   let currentBatch: Promise<void>[] = [];
   const processedIds = new Set<number>();
 

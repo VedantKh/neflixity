@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "load-movies": "ts-node src/scripts/load_movies.ts"
+    "load-movies": "tsx src/scripts/load_movies.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",

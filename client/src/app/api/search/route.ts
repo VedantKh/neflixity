@@ -28,8 +28,10 @@ export async function POST(req: Request) {
 
     console.log("Generating embedding for query:", query);
 
+    const task = 'Given a movie query, analyze the plot elements and themes to retrieve relevant movie names and descriptions that match the query'
+
     // Format query to match stored embedding format
-    const formattedQuery = `Title: ${query}`;
+    const formattedQuery = `Instruct: ${task}\nQuery: ${query}`;
     console.log("Formatted query:", formattedQuery);
 
     // Generate embedding for the search query
@@ -42,11 +44,11 @@ export async function POST(req: Request) {
     console.log("Generated embedding with dimensions:", embedding.length);
 
     // Search in Supabase using the match_movies function with a lower threshold
-    const { data, error } = await supabaseAdmin.rpc("match_movies", {
+    const { data, error } = await supabaseAdmin.rpc("match_movies_new", {
       query_embedding: embedding,
-      match_threshold: -1.0, // Even more permissive threshold
+      match_threshold: 0.0, // Even more permissive threshold
       match_count: 50, // Get more candidates
-      min_vote_count: 10, // Lower minimum vote count
+      min_vote_count: 20, // Lower minimum vote count
     });
 
     if (error) {
@@ -86,8 +88,7 @@ export async function POST(req: Request) {
     // Log raw results
     console.log("Raw results:", JSON.stringify(data.slice(0, 3), null, 2));
 
-    // Filter results by similarity score if needed - using a very low threshold
-    const filteredResults = data.filter((result) => result.similarity > -1.0);
+    const filteredResults = data;
     console.log("After similarity filter:", filteredResults.length, "results");
     console.log(
       "Top 3 similarities:",
